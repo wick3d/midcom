@@ -55,7 +55,11 @@
 
 <ul class="developers" tal:repeat="author midcom_core/authors">
     <li class="vcard">
-        <span class="fn" tal:content="author/name">Alice</span>
+        <span class="fn">
+            <a href="http://example.net" class="homepage" tal:attributes="href author/url" tal:content="author/name">
+                Alice
+            </a>
+        </span>
     </li>
 </ul>
 

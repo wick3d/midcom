@@ -156,6 +156,28 @@ class midcom_core_component_loader
         // TODO: Implement using http://spyc.sourceforge.net/ if syck is not available
         $manifest = syck_load($manifest_yaml);
         
+        // Normalize manifest
+        if (!isset($manifest['version']))
+        {
+            $manifest['version'] = '0.0.1devel';
+        }
+        if (!isset($manifest['authors']))
+        {
+            $manifest['authors'] = array();
+        }
+        foreach ($manifest['authors'] as $username => $author)
+        {
+            if (!isset($author['name']))
+            {
+                $manifest['authors'][$username]['name'] = '';
+            }
+            
+            if (!isset($author['url']))
+            {
+                $manifest['authors'][$username]['url'] = 'http://www.midgard-project.org';
+            }
+        }
+        
         if (!isset($this->manifests[$manifest['component']]))
         {
             $this->manifests[$manifest['component']] = $manifest;
