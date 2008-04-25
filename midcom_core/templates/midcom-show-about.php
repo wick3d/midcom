@@ -4,37 +4,58 @@
  *
  */
 ?>
-<h1>About Midgard CMS</h1>
+<h1>About MidCOM and Midgard</h1>
+
+<(midcom-show-vendor)>
+
+<div class="infobox">
+    <h2>Installed software</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>MidCOM</th>
+                <td tal:content="midcom_core/versions/midcom">3</td>
+            </tr>
+            <tr>
+                <th>Midgard</th>
+                <td tal:content="midcom_core/versions/midgard">2</td>
+            </tr>
+            <tr>
+                <th>PHP</th>
+                <td tal:content="midcom_core/versions/php">5</td>
+            </tr>
+        </thead>
+        <tbody tal:repeat="component midcom_core/components">
+            <tr>
+                <th tal:content="component/name">Some component</th>
+                <td tal:content="component/version">1.0</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
 
 <p>
-    Midgard is a Free Software framework for interactive web application development. It has
-    been developed and maintained by an international community since 1999. 
-    <a href="http://www.midgard-project.org/">Read more</a>.
+    MidCOM is an <a href="http://en.wikipedia.org/wiki/Model-view-controller">MVC</a> framework for
+    the PHP programming language. It runs on top of Midgard, a Free Software 
+    <a href="http://en.wikipedia.org/wiki/Persistent_storage">persistent storage</a> plaftorm for 
+    interactive web application development.
 </p>
 
-<table>
-    <tbody>
-        <tr>
-            <th>MidCOM</th>
-            <td tal:content="midcom_core/versions/midcom">3</td>
-        </tr>
-        <tr>
-            <th>Midgard</th>
-            <td tal:content="midcom_core/versions/midgard">2</td>
-        </tr>
-        <tr>
-            <th>PHP</th>
-            <td tal:content="midcom_core/versions/php">5</td>
-        </tr>
-    </tbody>
-</table>
+<p>
+    The first version of the Midgard platform was released in 1999, and it has been developed and maintained 
+    by an international community since then. First usable versions of 3rd generation MidCOM framework
+    surfaced in 2008.
+</p>
+
+<p>
+    <a href="http://www.midgard-project.org/">www.midgard-project.org</a>
+</p>
 
 <h2>Credits</h2>
 
 <ul class="developers" tal:repeat="author midcom_core/authors">
     <li class="vcard">
-        <h3 class="fn" tal:content="author/name">Alice</h3>
-        <span class="email" tal:content="author/email">alice@example.net</span>
+        <span class="fn" tal:content="author/name">Alice</span>
     </li>
 </ul>
 

@@ -28,6 +28,21 @@ class midcom_core_controllers_about
             'php'     => phpversion(),
         );
         
+        $data['components'] = array();
+        foreach ($_MIDCOM->componentloader->manifests as $component => $manifest)
+        {
+            if ($component == 'midcom_core')
+            {
+                continue;
+            }
+            
+            $data['components'][$component] = array
+            (
+                'name'    => $manifest['component'],
+                'version' => $manifest['version'],
+            );
+        }
+        
         $data['authors'] = $_MIDCOM->componentloader->manifests['midcom_core']['authors'];
     }
 

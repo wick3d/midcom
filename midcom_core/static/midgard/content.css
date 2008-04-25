@@ -53,3 +53,15 @@
 {
   border: none;
 }
+
+#content div.infobox
+{
+    float: right;
+    width: 30%;
+    margin-left: 10px;
+}
+
+#content div.infobox h2
+{
+    margin-top: 0px;
+}
