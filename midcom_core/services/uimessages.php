@@ -50,15 +50,7 @@ class midcom_core_services_uimessages_baseclass
         $this->load_configuration();
         
         $classname = null;
-        if (array_key_exists('type', $this->configuration))
-        {
-            $classname = "midcom_core_services_uimessages_{$this->configuration['type']}"; 
-            $this->implementation = new $classname($this->configuration);
-        }
-        else
-        {
-            $this->implementation =& $_MIDCOM->serviceloader->load('uimessages', &$this->configuration);
-        }
+        $this->implementation =& $_MIDCOM->uimessages;
     }
     
     private function load_configuration()

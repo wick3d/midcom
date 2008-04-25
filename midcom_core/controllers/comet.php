@@ -20,10 +20,8 @@ class midcom_core_controllers_comet
     
     public function action_messages($route_id, &$data, $args)
     {
-        $uimessages = $_MIDCOM->serviceloader->load('uimessages');
-        
-        if (   !$uimessages->supports('comet')
-            || !$uimessages->can_view())
+        if (   !$_MIDCOM->uimessages->supports('comet')
+            || !$_MIDCOM->uimessages->can_view())
         {
             return;
         }
@@ -55,13 +53,13 @@ class midcom_core_controllers_comet
         while (true)
         {
             $messages = '';    
-            if ($uimessages->has_messages())
+            if ($_MIDCOM->uimessages->has_messages())
             {
-                $messages = $uimessages->render_as('comet');
+                $messages = $_MIDCOM->uimessages->render_as('comet');
             }
             else
             {
-                $uimessages->add(array(
+                $_MIDCOM->uimessages->add(array(
                     'title' => 'Otsikko from comet',
                     'message' => 'viesti from comet...'
                 ));

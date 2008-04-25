@@ -430,11 +430,10 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
                 }
                 
                 $tal->uimessages = false;
-                $uimessages = $_MIDCOM->serviceloader->load('uimessages');
-                if (   $uimessages->has_messages()
-                    && $uimessages->can_view())
+                if (   $_MIDCOM->uimessages->has_messages()
+                    && $_MIDCOM->uimessages->can_view())
                 {
-                    $tal->uimessages = $uimessages->render();
+                    $tal->uimessages = $_MIDCOM->uimessages->render();
                 }
 
                 if ($_MIDCOM->timer)
@@ -509,8 +508,7 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
         }
         
         ///TODO: Connect this to some signal that tells the MidCOM execution has ended.
-        $uimessages = $_MIDCOM->serviceloader->load('uimessages');
-        $uimessages->store();
+        $_MIDCOM->uimessages->store();
     }
 }
 ?>

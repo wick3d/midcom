@@ -13,20 +13,14 @@
  */
 class midcom_core_midcom
 {
-    // Services
-    public $authentication;
-    public $authorization;
+    // Services that are always available
     public $configuration;
     public $componentloader;
     public $dispatcher;
-    public $templating;
-    public $l10n;
 
     // Helpers
-    public $navigation;
     public $context;
     public $timer = false;
-    
     
     public function __construct($dispatcher = 'midgard')
     {
@@ -59,19 +53,7 @@ class midcom_core_midcom
             require_once 'Benchmark/Timer.php';
             $this->timer = new Benchmark_Timer(true);
         }
-
-        // Load the preferred authentication implementation
-        $services_authentication_implementation = $this->configuration->get('services_authentication');
-        $this->authentication = new $services_authentication_implementation();
-      
-        // Load the preferred authorization implementation
-        $services_authorization_implementation = $this->configuration->get('services_authorization');
-        $this->authorization = new $services_authorization_implementation();
         
-        // Load the preferred templating implementation
-        $services_templating_implementation = $this->configuration->get('services_templating');
-        $this->templating = new $services_templating_implementation();
-                
         // Load the component loader
         $this->componentloader = new midcom_core_component_loader();
         
@@ -79,14 +61,7 @@ class midcom_core_midcom
         $this->context = new midcom_core_helpers_context();
         
         //Load the service loader
-        $this->serviceloader = new midcom_core_services_loader();
-        
-        // Load the navigation helper
-        //$this->navigation = new midcom_core_helpers_navigation();
-        
-        // Load the localization
-        $services_l10n_implementation = $this->configuration->get('services_l10n');
-        $this->l10n = new $services_l10n_implementation();
+        //$this->serviceloader = new midcom_core_services_loader();
 
         // Load the head helper
         $this->head = new midcom_core_helpers_head
@@ -95,6 +70,48 @@ class midcom_core_midcom
             $this->configuration->get('enable_js_midcom'),
             $this->configuration->get('js_midcom_config')
         );
+    }
+    
+    /**
+     * Helper for service initialization. Usually called via getters
+     *
+     * @param string $service Name of service to load
+     */
+    private function load_service($service)
+    {
+        if (isset($this->$service))
+        {
+            return;
+        }
+        
+        $interface_file = MIDCOM_ROOT . "/midcom_core/services/{$service}.php";
+        if (!file_exists($interface_file))
+        {
+            throw new Exception("Service {$service} not installed");
+        }
+        
+        if (!class_exists("midcom_core_services_{$service}"))
+        {
+            //echo "midcom_core_services_{$name}\n<br />";
+            //include($interface_file);
+        }
+        
+        $service_implementation = $_MIDCOM->configuration->get("services_{$service}");
+        if (!$service_implementation)
+        {
+            throw new Exception("No implementation defined for service {$service}");
+        }
+        
+        $this->$service = new $service_implementation();
+    }
+    
+    /**
+     * Magic getter for service loading
+     */
+    public function __get($key)
+    {
+        $this->load_service($key);
+        return $this->$key;
     }
     
     /**
