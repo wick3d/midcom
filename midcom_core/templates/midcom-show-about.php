@@ -48,7 +48,7 @@
 </p>
 
 <p>
-    <a href="http://www.midgard-project.org/">www.midgard-project.org</a>
+    <a href="http://www.midgard-project.org/" rel="group">www.midgard-project.org</a>
 </p>
 
 <h2>Credits</h2>
@@ -56,7 +56,7 @@
 <ul class="developers" tal:repeat="author midcom_core/authors">
     <li class="vcard">
         <span class="fn">
-            <a href="http://example.net" class="homepage" tal:attributes="href author/url" tal:content="author/name">
+            <a href="http://example.net" rel="member" class="url" tal:attributes="href author/url" tal:content="author/name">
                 Alice
             </a>
         </span>
@@ -64,5 +64,7 @@
 </ul>
 
 <div class="logos">
-    <a href="http://www.gnu.org/licenses/lgpl.html"><img src="/midcom-static/midcom_core/midgard/lgplv3.png" alt="LGPLv3" /></a>
+    <a href="http://www.gnu.org/licenses/lgpl.html" rel="license">
+        <img src="/midcom-static/midcom_core/midgard/lgplv3.png" alt="LGPLv3" />
+    </a>
 </div>
