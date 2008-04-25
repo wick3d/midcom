@@ -15,7 +15,7 @@
 class midcom_core_services_authorization_simple implements midcom_core_services_authorization
 {
     private $sudo = false;
-    private $sudo_levels = 0;
+    private $sudo_stack = array();
     
     /**
      * Starts up the authorization service and connects to various signals
@@ -131,7 +131,9 @@ class midcom_core_services_authorization_simple implements midcom_core_services_
     {
         // TODO: Check per-component access control
         $this->sudo = true;
-        $this->sudo_levels++;
+        
+        $this->sudo_stack[] = $component;
+        
         return $this->sudo;
     }
     
@@ -140,8 +142,9 @@ class midcom_core_services_authorization_simple implements midcom_core_services_
      */
     public function leave_sudo()
     {
-        $this->sudo_levels--;
-        if ($this->sudo_levels == 0)
+        array_pop($this->sudo_stack);
+
+        if (empty($this->sudo_stack))
         {
             $this->sudo = false;
         }
