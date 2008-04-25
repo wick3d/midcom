@@ -51,7 +51,7 @@ class net_nemein_comettest_controllers_index
     	
     	while (true)
     	{
-    		midcom_core_helpers_comet::pushdata(time(), $type, $name);
+    		midcom_core_helpers_comet::pushdata(date('r'), $type, $name);
     		ob_flush();
     		flush();
     		sleep(1);
