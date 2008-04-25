@@ -59,9 +59,6 @@ class midcom_core_midcom
         
         // Load the context helper
         $this->context = new midcom_core_helpers_context();
-        
-        //Load the service loader
-        //$this->serviceloader = new midcom_core_services_loader();
 
         // Load the head helper
         $this->head = new midcom_core_helpers_head
