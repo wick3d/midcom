@@ -98,8 +98,9 @@ class midcom_core_helpers_metadata
 
         if ($approved)
         {
-            // TODO: This should be a SUDO operation
+            $_MIDCOM->authorization->enter_sudo('midcom_core');
             midcom_core_helpers_metadata::approve(&$object);
+            $_MIDCOM->authorization->leave_sudo();
         }
     }
     
@@ -133,8 +134,9 @@ class midcom_core_helpers_metadata
         
         if ($approved)
         {
-            // TODO: This should be a SUDO operation
+            $_MIDCOM->authorization->enter_sudo('midcom_core');
             midcom_core_helpers_metadata::approve(&$object);
+            $_MIDCOM->authorization->leave_sudo();
         }
     }
 }
