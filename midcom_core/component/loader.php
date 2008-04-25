@@ -14,6 +14,7 @@
 class midcom_core_component_loader
 {
     public $manifests = array();
+    public $authors = array();
     private $tried_to_load = array();
     private $interfaces = array();
 
@@ -175,6 +176,11 @@ class midcom_core_component_loader
             if (!isset($author['url']))
             {
                 $manifest['authors'][$username]['url'] = 'http://www.midgard-project.org';
+            }
+            
+            if (!isset($this->authors[$username]))
+            {
+                $this->authors[$username] = $manifest['authors'][$username];
             }
         }
         

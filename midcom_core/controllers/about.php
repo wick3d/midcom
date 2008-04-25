@@ -43,7 +43,8 @@ class midcom_core_controllers_about
             );
         }
         
-        $data['authors'] = $_MIDCOM->componentloader->manifests['midcom_core']['authors'];
+        $data['authors'] = $_MIDCOM->componentloader->authors;
+        ksort($data['authors']);
     }
 
 }
