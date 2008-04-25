@@ -48,4 +48,8 @@
   margin: 0.2em 0 0.8em;
   padding-left: 2em;
 }
+
+#content a img
+{
+  border: none;
 }

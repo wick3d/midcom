@@ -47,6 +47,11 @@ routes:
         action: delete
         route: /__midcom/delete
         content_entry_point: midcom-delete-page
+    midcom_about:
+        controller: midcom_core_controllers_about
+        action: about
+        route: /__midcom
+        content_entry_point: midcom-show-about
     comet_messages:
         controller: midcom_core_controllers_comet
         action: messages
