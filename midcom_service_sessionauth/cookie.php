@@ -64,7 +64,7 @@ class midcom_service_sessionauth_cookie
                     $this->_cookie_id,
                     "{$this->session_id}-{$this->user_id}",
                     0,
-                    @$GLOBALS['midcom_config']['auth_backend_simple_cookie_path']
+                    $_MIDCOM->configuration->services_authentication_cookie_cookiepath,
                 );
     }
     
