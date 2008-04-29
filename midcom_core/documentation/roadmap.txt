@@ -3,11 +3,12 @@ MidCOM 3 Roadmap
 
 # 3.0.0alpha1 - July 2008
 
-* Component API
-* MVC API
+* Component API (DONE)
+* MVC API (DONE)
 * Released as simple tarball
 * WebDAV for page management
-* Basic and Cookie authentication
+* Basic authentication (DONE)
+* Cookie authentication
 
 # 3.0.0alpha2
 
@@ -16,6 +17,7 @@ MidCOM 3 Roadmap
 * Component extension support
 * Owner-based authorization provider
 * Metadata service
+* Cache service
 
 # 3.0.0alpha3
 
@@ -23,6 +25,7 @@ MidCOM 3 Roadmap
 * ACL-based authorization provider
 * Attachment support
 * Permanent linking support
+* Content caching
 
 # 3.0.0beta1
 
@@ -36,3 +39,4 @@ MidCOM 3 Roadmap
 # 3.0.0beta2
 
 * MgdSchema API REST wrapper
+* FCKeditor file browser support
