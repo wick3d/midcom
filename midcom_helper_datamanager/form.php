@@ -185,7 +185,6 @@ class midcom_helper_datamanager_form
             return '';
         }
         $output  = "<div class=\"form_toolbar\">\n";
-        
         foreach ($this->schema->operations as $operation => $config)
         {
             $label = ucfirst($operation);
@@ -224,12 +223,17 @@ class midcom_helper_datamanager_form
         foreach ($this->schema->operations as $operation => $config)
         {
             $var = "{$this->namespace}_{$operation}";
-
             if (isset($_POST[$var]))
             {
                 return $operation;
             }
         }
+        
+        if (is_null($this->storage->object))
+        {
+                return 'create';
+        }
+         
         return 'edit';
     }
 

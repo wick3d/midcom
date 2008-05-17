@@ -202,10 +202,10 @@ class midcom_helper_datamanager_datamanager
         }
         else
         {
-            $schema = $object->get_parameter('midcom_helper_datamanager', 'schema_name');
+         //   $schema = $object->get_parameter('midcom_helper_datamanager', 'schema_name');
         }
 
-        if (! $schema)
+        if (@! $schema)
         {
             $schema = null;
         }
