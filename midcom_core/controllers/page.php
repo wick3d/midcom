@@ -38,31 +38,5 @@ class midcom_core_controllers_page extends midcom_core_controllers_baseclasses_m
     {
     }
     
-    public function action_create($route_id, &$data, $args)
-    {
-        if (!isset($_MIDGARD['page']))
-        {
-            throw new midcom_exception_notfound("No Midgard page found");
-        }
-        $data['parent'] = new midgard_page();
-        $data['parent']->get_by_id($_MIDGARD['page']);
-        
-        $data['page'] = new midgard_page();
-        $data['page']->up = $data['parent']->id;
-        
-        $_MIDCOM->authorization->require_do('midgard:create', $data['parent']);
-        
-        if (isset($_POST['save']))
-        {
-            $data['page']->name = $_POST['name'];
-            $data['page']->title = $_POST['title'];
-            $data['page']->content = $_POST['content'];
-            $data['page']->info = 'active';
-            $data['page']->create();
-            
-            header("Location: {$_MIDCOM->context->prefix}{$data['page']->name}/");
-            exit();
-        }
-    }
 }
 ?>

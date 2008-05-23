@@ -72,7 +72,21 @@ class midcom_helper_datamanager_form_simple extends midcom_helper_datamanager_fo
                 throw new midcom_helper_datamanager_exception_save();
                 // and then what ?
                 break;
-
+                
+            case 'create':
+                if(count($_POST)>1) // FIXME: More intelligent way.
+                {
+                    $this->datamanager->storage->object = new midgard_page();
+                    $this->pass_results_to_method('on_submit', $results, true);
+                    $this->pass_results_to_method('sync_widget2type', $results, false);
+                    // FIXME: Can the $_MIDGARD['page'] used directly
+                    // Should the parent_id available somewhere else?
+                    $parent = new midgard_page();
+                    $parent->get_by_id($_MIDGARD['page']);
+                    $this->datamanager->storage->object->up = $parent->sid;
+                    $this->datamanager->save();
+                }
+            break;
             default:
                 throw new midcom_helper_datamanager_exception_datamanager("Don't know how to handle operation {$operation}");
         }

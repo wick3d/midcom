@@ -130,11 +130,17 @@ abstract class midcom_helper_datamanager_storage
                 }
                 $this->on_store_data($name, $data);
             }
+          
+        }
+        // FIXME: Better way to determine if object has been saved?
+        if($this->object->id == 0)
+        {
+            $this->object->create();
         }
 
         // Update the storage object last
         if (! $this->on_update_object())
-        {
+        { 
             return false;
         }
 

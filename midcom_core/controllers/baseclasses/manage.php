@@ -53,17 +53,67 @@ abstract class midcom_core_controllers_baseclasses_manage
         $this->load_object($args);
         $this->load_datamanager($data, $this->configuration->get('schemadb'));
         $data['object'] =& $this->object;
-        
+     
         $this->populate_toolbar();
     }
-    
+    // TODO: Refactor. There is code duplication with edit
+    public function action_create($route_id, &$data, $args)
+    { 
+        if (!isset($_MIDGARD['page']))
+        {
+            throw new midcom_exception_notfound("No Midgard page found");
+        }
+        
+        $data['object'] =& $this->object;
+        $data['parent'] = new midgard_page();
+        $data['parent']->get_by_id($_MIDGARD['page']);
+        
+        $this->load_datamanager($data, $this->configuration->get('schemadb'));
+
+        // TODO: Is it right to differ create from edit?
+        $this->datamanager->schema->operations = array(
+        'create' => '',
+        'cancel' => '',
+        );
+        
+        $_MIDCOM->authorization->require_do('midgard:create', $data['parent']);
+     
+          // Handle saves through the datamanager
+        $data['datamanager_form'] =& $this->datamanager->get_form('simple');
+        try
+        {   
+            $data['datamanager_form']->process();
+        }
+        catch (midcom_helper_datamanager_exception_datamanager $e)
+        {
+            // TODO: add uimessage of $e->getMessage();
+            header('Location: ' . $this->get_object_url());
+            exit();
+        }
+
+        $_MIDCOM->head->add_link_head
+        (
+            array
+            (
+                'rel'   => 'stylesheet',
+                'type'  => 'text/css',
+                'media' => 'screen',
+                'href'  => MIDCOM_STATIC_URL . '/midcom_helper_datamanager/simple.css',
+            )
+        );
+        
+        $this->populate_toolbar();
+        
+    }
+
+        
     public function action_edit($route_id, &$data, $args)
     {
         $this->load_object($args);
         $this->load_datamanager($data, $this->configuration->get('schemadb'));
         $data['object'] =& $this->object;
         $_MIDCOM->authorization->require_do('midgard:update', $this->object);
-
+        
         // Handle saves through the datamanager
         $data['datamanager_form'] =& $this->datamanager->get_form('simple');
         try

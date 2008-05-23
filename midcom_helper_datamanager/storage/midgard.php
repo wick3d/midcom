@@ -149,7 +149,11 @@ class midcom_helper_datamanager_storage_midgard extends midcom_helper_datamanage
 
             default:
                 $fieldname = $this->schema->fields[$name]['storage']['location'];
-                return $this->object->$fieldname;
+                if(isset($this->object->$fieldname))
+                {
+                    return $this->object->$fieldname;
+                }
+                return null;
         }
     }
 
