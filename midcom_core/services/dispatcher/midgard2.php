@@ -62,6 +62,7 @@ class midcom_core_services_dispatcher_midgard2 extends midcom_core_services_disp
             $current_page = $page;
         }
         
+        $page_data['id'] = $current_page->id;
         $page_data['guid'] = $current_page->guid;
         $page_data['title'] = $current_page->title;
         $page_data['content'] = $current_page->content;

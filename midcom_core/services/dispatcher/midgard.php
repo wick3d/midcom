@@ -68,6 +68,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         $guids = $mc->list_keys();
         foreach ($guids as $guid => $array)
         {
+            $page_data['id'] = $_MIDGARD['page'];
             $page_data['guid'] = $guid;
             $page_data['title'] = $mc->get_subkey($guid, 'title');
             $page_data['content'] = $mc->get_subkey($guid, 'content');
