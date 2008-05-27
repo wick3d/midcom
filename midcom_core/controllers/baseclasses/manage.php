@@ -29,6 +29,11 @@ abstract class midcom_core_controllers_baseclasses_manage
     abstract public function load_object($args);
     
     /**
+     * Method for preparing a new object to be created. To be overridden in the actual controller.
+     */
+    abstract public function prepare_new_object($args);
+    
+    /**
      * Method for generating route to the object
      *
      * @return string Object URL
@@ -39,11 +44,25 @@ abstract class midcom_core_controllers_baseclasses_manage
     
     public function load_datamanager(&$data, $schemadb)
     {
-        // Load the article via Datamanager for configurability
+        // Load the object via Datamanager for configurability
         $_MIDCOM->componentloader->load('midcom_helper_datamanager');
         
         $this->datamanager = new midcom_helper_datamanager_datamanager($schemadb);
         $this->datamanager->autoset_storage($this->object);
+        
+        $data['datamanager'] =& $this->datamanager;
+    }
+    
+    public function load_creation_datamanager(&$data, $schemadb, $schema_name)
+    {
+        // Load the Datamanager in creation mode for configurability
+        $_MIDCOM->componentloader->load('midcom_helper_datamanager');
+        
+        $this->datamanager = new midcom_helper_datamanager_datamanager($schemadb);
+        
+        // TODO: Refactor all of these to DM itself
+        $this->datamanager->set_schema($schema_name);
+        $this->datamanager->set_storage($this->object);
         
         $data['datamanager'] =& $this->datamanager;
     }
@@ -66,17 +85,15 @@ abstract class midcom_core_controllers_baseclasses_manage
         
         $data['object'] =& $this->object;
         $data['parent'] = new midgard_page();
-        $data['parent']->get_by_id($_MIDGARD['page']);
-        
-        $this->load_datamanager($data, $this->configuration->get('schemadb'));
-
-        // TODO: Is it right to differ create from edit?
-        $this->datamanager->schema->operations = array(
-        'create' => '',
-        'cancel' => '',
-        );
+        $data['parent']->get_by_id($_MIDCOM->context->page['id']);
         
         $_MIDCOM->authorization->require_do('midgard:create', $data['parent']);
+
+        // Prepare the new object that datamanager will eventually create
+        $this->prepare_new_object($args);
+        
+        // Load datamanager in creation mode
+        $this->load_creation_datamanager($data, $this->configuration->get('schemadb'), 'default');
      
           // Handle saves through the datamanager
         $data['datamanager_form'] =& $this->datamanager->get_form('simple');
@@ -84,7 +101,7 @@ abstract class midcom_core_controllers_baseclasses_manage
         {   
             $data['datamanager_form']->process();
         }
-        catch (midcom_helper_datamanager_exception_datamanager $e)
+        catch (midcom_helper_datamanager_exception_save $e)
         {
             // TODO: add uimessage of $e->getMessage();
             header('Location: ' . $this->get_object_url());

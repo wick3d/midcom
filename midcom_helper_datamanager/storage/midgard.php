@@ -45,6 +45,11 @@ class midcom_helper_datamanager_storage_midgard extends midcom_helper_datamanage
             return '';
         }
         
+        if (!$this->object->guid)
+        {
+            return 'create';
+        }
+        
         return $this->object->guid;
     }
 
@@ -99,7 +104,7 @@ class midcom_helper_datamanager_storage_midgard extends midcom_helper_datamanage
                 $fieldname = $this->schema->fields[$name]['storage']['location'];
                 if (!property_exists($this->object, $fieldname)) 
                 {
-                    throw new midcom_helper_datamanager_exception_storage("Missing $fieldname field in object: " . get_class($this->object));
+                    //throw new midcom_helper_datamanager_exception_storage("Missing $fieldname field in object: " . get_class($this->object));
                 }
                 $this->object->$fieldname = $data;
                 break;
@@ -159,6 +164,11 @@ class midcom_helper_datamanager_storage_midgard extends midcom_helper_datamanage
 
     protected function on_update_object()
     {
+        if (!$this->object->guid)
+        {
+            return $this->object->create();
+        }
+        
         return $this->object->update();
     }
 }
