@@ -33,6 +33,7 @@ class midcom_core_controllers_page extends midcom_core_controllers_baseclasses_m
     {
         $this->object = new midgard_page();
         $this->object->up = $_MIDCOM->context->page['id'];
+        $this->object->info = 'active';
     }
     
     public function get_object_url()
