@@ -162,11 +162,11 @@ class midcom_helper_datamanager_storage_midgard extends midcom_helper_datamanage
 
             default:
                 $fieldname = $this->schema->fields[$name]['storage']['location'];
-                if ($this->reflector->get_midgard_type($fieldname) != MGD_TYPE_NONE)
+                if ($this->reflector->get_midgard_type($fieldname) == MGD_TYPE_NONE)
                 {
-                    return $this->object->$fieldname;
+                    return null;
                 }
-                return null;
+                return $this->object->$fieldname;
         }
     }
 
