@@ -84,6 +84,13 @@ class midcom_helper_datamanager_widget_fckeditor extends midcom_helper_datamanag
   public function render_html()
     {
         $output = "<script src=\"{$this->configuration['basepath']}fckeditor.js\"></script>";
+        
+        if ($this->frozen)
+        {
+            // Include the utility functions for disabling FCKeditor
+            $output .= "<script src=\"{$this->configuration['basepath']}toggleFCKeditor.js\"></script>";        
+        }
+        
         $output .=  "<label for=\"{$this->namespace}_{$this->main_input_name}\"><span>{$this->field['title']}</span>\n";
         $output .= "    <textarea class=\"fckeditor\" style=\"width: {$this->width}; height: {$this->height}px;\" id=\"{$this->namespace}_{$this->main_input_name}\" name=\"{$this->namespace}_{$this->main_input_name}\"";
         if ($this->frozen)
@@ -96,13 +103,26 @@ class midcom_helper_datamanager_widget_fckeditor extends midcom_helper_datamanag
         $output .= "<script>\n";
         $output .= "   jQuery(document).ready(function(){\n";
         $output .= "       var oFCKeditor{$this->namespace}_{$this->main_input_name} = new FCKeditor(\"{$this->namespace}_{$this->main_input_name}\");\n";
+        
+        // Set configuration for the editor
         $output .= "       oFCKeditor{$this->namespace}_{$this->main_input_name}.BasePath = \"".$this->configuration['basepath']."\";\n";
         $output .= "       oFCKeditor{$this->namespace}_{$this->main_input_name}.Height = {$this->height};\n";
         $output .= "       oFCKeditor{$this->namespace}_{$this->main_input_name}.Width = \"{$this->width}\";\n";
         $output .= "       oFCKeditor{$this->namespace}_{$this->main_input_name}.ToolbarSet = \"{$this->toolbarset}\";\n";
         
+        // Start the editor
         $output .= "       oFCKeditor{$this->namespace}_{$this->main_input_name}.ReplaceTextarea();\n";
         $output .= "   });\n";
+                
+        if ($this->frozen)
+        {
+            $output .= "    function FCKeditor_OnComplete(editorInstance)\n";
+            $output .= "    {\n";
+            $output .= "        toggleFCKeditor(editorInstance);\n";
+            $output .= "    }\n";
+        }
+        
+
         $output .= "</script>\n";
         $output .= "</label>\n";
         return $output;
