@@ -176,7 +176,6 @@ class midcom_helper_datamanager_storage_midgard extends midcom_helper_datamanage
         {
             return $this->object->create();
         }
-        
         return $this->object->update();
     }
 }
