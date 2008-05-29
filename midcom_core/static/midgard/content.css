@@ -55,14 +55,14 @@ footer
   border: none;
 }
 
-#content div.infobox
+#content aside
 {
     float: right;
     width: 30%;
     margin-left: 10px;
 }
 
-#content div.infobox h2
+#content aside h2
 {
     margin-top: 0px;
 }

@@ -8,7 +8,7 @@
 
 <(midcom-show-vendor)>
 
-<div class="infobox">
+<aside>
     <h2>Installed software</h2>
     <table>
         <thead>
@@ -32,7 +32,7 @@
             </tr>
         </tbody>
     </table>
-</div>
+</aside>
 
 <p>
     MidCOM is an <a href="http://en.wikipedia.org/wiki/Model-view-controller">MVC</a> framework for
