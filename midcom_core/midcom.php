@@ -32,6 +32,17 @@ class midcom_core_midcom
         $this->dispatcher = new $dispatcher_implementation();
         
         $this->load_base_services();
+        
+        // Show the world this is Midgard
+        $this->head->add_meta
+        (
+            array
+            (
+                'name' => 'generator',
+                'content' => "Midgard/" . mgd_version() . " MidCOM/{$this->componentloader->manifests['midcom_core']['version']} PHP/" . phpversion()
+            )
+        );
+        
         $this->context->create();
         
         date_default_timezone_set($this->configuration->get('default_timezone'));
