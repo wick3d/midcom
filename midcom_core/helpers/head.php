@@ -195,7 +195,7 @@ class midcom_core_helpers_head
             return false;
         }
 
-        $output = '<link';
+        $output = '<meta';
         foreach ($attributes as $key => $val)
         {
             $output .= " {$key}=\"{$val}\" ";
