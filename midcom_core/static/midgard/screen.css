@@ -25,8 +25,9 @@ body
   height: 100%;
 }
 
-#branding
+header
 {
+  display: block;
   height: 146px;
   background-image: url('arc.gif');
   background-repeat: no-repeat;
@@ -34,7 +35,7 @@ body
   overflow: visible;
 }
 
-#branding a img
+header a img
 {
   border-style: none;
 }
@@ -55,8 +56,9 @@ body.org_routamc_gallery #content-text
   margin-right: 0;
 }
 
-#siteinfo
+footer
 {
+  display: block;
   background-color: #6b4f2e;
   height: 1.5em;
   margin: -1.5em 0 0;
@@ -71,7 +73,7 @@ body.org_routamc_gallery #content-text
   color: #000088;
 }
 
-#siteinfo a
+footer a
 {
   text-decoration: none;
   font-weight: bold;
@@ -79,14 +81,14 @@ body.org_routamc_gallery #content-text
 
 #container a:hover,
 #container a:visited:hover,
-#siteinfo a:hover,
-#siteinfo a:visited:hover
+footer a:hover,
+footer a:visited:hover
 {
   text-decoration: underline;
 }
 
-#siteinfo,
-#siteinfo a
+footer,
+footer a
 {
   color: #ffffff;
 }

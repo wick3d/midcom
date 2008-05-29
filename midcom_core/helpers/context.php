@@ -29,7 +29,8 @@ class midcom_core_helpers_context
         $context_id = count($this->contexts);
         $this->contexts[$context_id] = array
         (
-            'mimetype'             => 'text/html', //'application/xhtml+xml',
+            // TODO: Convert to 'application/xhtml+xml' as soon as MidCOM 3 javascripts are compatible with it
+            'mimetype'             => 'text/html', 
             'template_engine'      => 'tal',
             'template_entry_point' => 'ROOT',
             'content_entry_point'  => 'content',

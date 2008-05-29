@@ -1,12 +1,13 @@
 <?php
 /**
- * @package midcom_core
+ * The default HTML5 layout template for Midgard
  *
+ * @todo convert to XHTML5 as soon as MidCOM 3 javascripts are compatible with it
+ * @package midcom_core
  */
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-   	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html>
     <head>
         <title tal:content="page/title">Midgard CMS</title>
         <span tal:replace="php: MIDCOM.head.print_elements()" />
@@ -17,21 +18,22 @@
     </head>
     <body>
         <div id="container">
-            <div id="branding">
+            <header>
                 <div class="grouplogo">
                     <a href="/"><img src="/midcom-static/midcom_core/midgard/midgard.gif" alt="Midgard" width="135" height="138" /></a>
                 </div>
-            </div>
-            <div id="content">
+            </header>
+            <section id="content">
                 <!-- beginning of content-text -->
                 <div id="content-text">
                     <(content)>
                 </div>
-            </div>
+            </section>
         </div>
-        <div id="siteinfo">
-             <a href="http://www.midgard-project.org/">Midgard CMS</a> power since 1999. <a href="http://www.gnu.org/licenses/lgpl.html">Free software</a>.
-        </div>
+        <footer>
+             <a href="http://www.midgard-project.org/" rel="powered">Midgard CMS</a> power since 1999. 
+             <a href="http://www.gnu.org/licenses/lgpl.html" rel="license">Free software</a>.
+        </footer>
         <span tal:condition="show_toolbar" tal:replace="php: MIDCOM.toolbar.render()" />
         <span tal:condition="uimessages" tal:replace="structure uimessages" />
     </body>
