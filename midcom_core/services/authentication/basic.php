@@ -15,6 +15,7 @@ class midcom_core_services_authentication_basic implements midcom_core_services_
 {
     private $user = null;
     private $person = null;
+    private $sitegroup = null;
     
     public function __construct()
     {
@@ -53,10 +54,12 @@ class midcom_core_services_authentication_basic implements midcom_core_services_
     {
         if (extension_loaded('midgard2'))
         {
-            // FIXME: Remove this once midgard_user::auth works in Midgard 2.x
-            return true;
+            // In Midgard2 we need current SG name for authentication
+            $this->sitegroup = $_MIDGARD_CONNECTION->get_sitegroup();
         }
-        $this->user = midgard_user::auth($username, $password, null);
+        
+        $this->user = midgard_user::auth($username, $password, $this->sitegroup);
+        
         if (!$this->user)
         {
             return false;

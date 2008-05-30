@@ -13,9 +13,6 @@
 require('midcom_core/framework.php');
 $_MIDCOM = new midcom_core_midcom('midgard2');
     
-// FIXME: Remove this once midgard_user::auth works in Midgard 2.x
-$_MIDCOM->authorization->enter_sudo('midcom_core');
-
 // Process the request
 $_MIDCOM->process();
 
