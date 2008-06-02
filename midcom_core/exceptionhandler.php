@@ -43,9 +43,29 @@ class midcom_core_exceptionhandler
         if ($http_code != 304)
         {
             header('Content-Type: text/html; charset=utf-8');
-
-            // TODO: Templating
-            echo "<html><h1>{$header}</h1><p>{$message_type}: {$message}</p>";
+            
+            $data['header'] = $header;
+            $data['message_type'] = $message_type;
+            $data['message'] = $message;
+            $data['exception'] = $exception;
+            
+            try
+            {
+                if (!isset($_MIDCOM))
+                {
+                    throw new Exception("MidCOM not loaded");
+                }
+                $_MIDCOM->context->set_item('midcom_core_exceptionhandler', $data);
+                $_MIDCOM->context->set_item('template_entry_point', 'midcom-show-error');
+                
+                $_MIDCOM->templating->template();
+                $_MIDCOM->templating->display();
+            }
+            catch (Exception $e)
+            {
+                // Templating isn't working
+                echo "<!DOCTYPE html>\n<html>\n<head>\n<title>{$header}</title>\n</head>\n<body>\n<h1>{$header}</h1>\n<p>{$message_type}: {$message}</p><body>\n";
+            }
         }
     }
 

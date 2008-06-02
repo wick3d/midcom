@@ -27,7 +27,11 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
     
     private function get_cache_identifier()
     {
-        return "{$_MIDGARD['host']}-{$_MIDGARD['page']}-{$_MIDGARD['style']}-" . $_MIDCOM->context->get_current_context() . "-{$_MIDCOM->context->route_id}";
+        if (isset($_MIDCOM->context->route_id))
+        {
+            return "{$_MIDGARD['host']}-{$_MIDGARD['page']}-{$_MIDGARD['style']}-" . $_MIDCOM->context->get_current_context() . "-{$_MIDCOM->context->route_id}";
+        }
+        return "{$_MIDGARD['host']}-{$_MIDGARD['page']}-{$_MIDGARD['style']}-" . $_MIDCOM->context->get_current_context();
     }
     
     private function get_cache_directory()
@@ -376,7 +380,7 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
     {
         $this->prepare_cache();
         $cache_file = $this->cache_directory . '/' . $this->get_cache_identifier() . '.php';
-        
+
         if (file_exists($cache_file))
         {
             return;
