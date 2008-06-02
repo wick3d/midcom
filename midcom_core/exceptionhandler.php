@@ -64,7 +64,16 @@ class midcom_core_exceptionhandler
             catch (Exception $e)
             {
                 // Templating isn't working
-                echo "<!DOCTYPE html>\n<html>\n<head>\n<title>{$header}</title>\n</head>\n<body>\n<h1>{$header}</h1>\n<p>{$message_type}: {$message}</p><body>\n";
+                echo "<!DOCTYPE html>\n";
+                echo "<html>\n";
+                echo "    <head>\n";
+                echo "        <title>{$header}</title>\n";
+                echo "    </head>\n";
+                echo "    <body class=\"{$message_type}\">\n";
+                echo "        <h1>{$header}</h1>\n";
+                echo "        <p>{$message}</p>\n";
+                echo "    </body>\n";
+                echo "</html>";
             }
         }
     }

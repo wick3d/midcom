@@ -16,7 +16,7 @@
         <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
         <link rel="shortcut icon" href="/midcom-static/midcom_core/midgard/midgard.ico" type="image/vnd.microsoft.icon" />
     </head>
-    <body>
+    <body class="error" tal:attributes="class midcom_core_exceptionhandler/message_type">
         <div id="container">
             <header>
                 <div class="grouplogo">
