@@ -21,6 +21,11 @@ class midcom_core_services_dispatcher_midgard2 extends midcom_core_services_disp
         {
             throw new Exception('Midgard 2.x is required for this MidCOM setup.');
         }
+        
+        if (!is_object($_MIDGARD_CONNECTION->request_config))
+        {
+            throw new midcom_exception_httperror('Midgard database connection not found.', 503);
+        }
 
         foreach ($_MIDGARD_CONNECTION->request_config->argv as $argument)
         {

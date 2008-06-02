@@ -21,6 +21,7 @@ class midcom_core_exceptionhandler
         {
             case 'midcom_exception_notfound':
             case 'midcom_exception_unauthorized':
+            case 'midcom_exception_httperror':
                 $http_code = $exception->getCode();
                 break;
 
@@ -58,6 +59,7 @@ class midcom_core_exceptionhandler
             401 => 'HTTP/1.0 401 Unauthorized',
             404 => 'HTTP/1.0 404 Not Found',
             500 => 'HTTP/1.0 500 Server Error',
+            503 => 'HTTP/1.0 503 Service Unavailable',
         );
 
         if (!isset($headers[$code]))
@@ -92,6 +94,20 @@ class midcom_exception_unauthorized extends Exception
 {
     // Redefine the exception so message isn't optional
     public function __construct($message, $code = 401) 
+    {
+        parent::__construct($message, $code);
+    }
+}
+
+/**
+ * MidCOM 3 generic HTTP error exception
+ *
+ * @package midcom_core
+ */
+class midcom_exception_httperror extends Exception
+{
+    // Redefine the exception so message isn't optional
+    public function __construct($message, $code = 500) 
     {
         parent::__construct($message, $code);
     }
