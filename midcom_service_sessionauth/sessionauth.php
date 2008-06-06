@@ -8,6 +8,10 @@
  
 /**
  * Provides a session based authentication method.
+ * Session and login data is stored to midcom_core_loginsession_db
+ *
+ * TODO: Refactoring is needed. Perhaps all more advanced authentication
+ * methods should inherit the very basic authentication
  *
  * @package midcom_service_sessionauth
  */
@@ -61,6 +65,12 @@ class midcom_service_sessionauth_sessionauth implements midcom_core_services_aut
         return $this->person;
     }
 
+    /**
+     * Executes the login to midgard.
+     * @param username
+     * @param password
+     * @return bool 
+     */
     private function do_midgard_login($username, $password)
     {
         if (extension_loaded('midgard2'))
@@ -80,7 +90,14 @@ class midcom_service_sessionauth_sessionauth implements midcom_core_services_aut
     }
     
 
-
+    /**
+      * Function creates the login session entry to the database
+      * TODO: Function does not produce any nice exceptions 
+      *
+      * @param username
+      * @param password
+      * @clientip determined automatically if not set
+      */
     private function create_login_session($username, $password, $clientip = null)
     {
         if( is_null($clientip))
@@ -120,6 +137,11 @@ class midcom_service_sessionauth_sessionauth implements midcom_core_services_aut
         
     }
     
+    /**
+      * Function deletes login session row from database and
+      * cleans away the cookie
+      * TODO: Write the actual functionality
+      */
     public function logout()
     {
         return true;

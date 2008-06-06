@@ -1,11 +1,30 @@
 <?php
 
+/**
+ * @package midcom_service_sessionauth
+ * @author The Midgard Project, http://www.midgard-project.org
+ * @copyright The Midgard Project, http://www.midgard-project.org
+ * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License
+ */
+ 
+/**
+ * Provides a cookie setting and validation functionality
+ * for cookie based authentication service
+ * Cookie path is set by the midcom_service_sessionauth_cookie_path
+ *
+ *
+ * @package midcom_service_sessionauth
+ */
 class midcom_service_sessionauth_cookie
 {
     private $_cookie_id = 'midcom_services_auth_backend_simple-';
     protected $session_id = null;
     protected $user_id = null;
     
+    /**
+      * Reads session data from the cookie. It also makes
+      * some simple checks for the validity of the cookie data
+      */
     public function read_login_session()
     {
         $reset_cookie = false;
@@ -37,10 +56,10 @@ class midcom_service_sessionauth_cookie
         
         return true;
     }
-        
+    
     private function set_cookie()
     {
-        // TODO: Make config available so no suppression is needed
+        // TODO: Fix globals config
         setcookie(
                     $this->_cookie_id,
                     "{$this->session_id}-{$this->user_id}",
@@ -56,7 +75,7 @@ class midcom_service_sessionauth_cookie
     
     private function delete_cookie()
     {
-        // TODO: Make config available so no suppression is needed
+        // TODO: Fix globals config
         setcookie(
                     $this->_cookie_id,
                     false,
