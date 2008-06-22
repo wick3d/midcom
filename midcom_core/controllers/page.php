@@ -36,11 +36,16 @@ class midcom_core_controllers_page extends midcom_core_controllers_baseclasses_m
         $this->object->info = 'active';
     }
     
-    public function get_object_url()
+    public function get_url_show()
     {
         return $_MIDGARD['self'];
     }
     
+    public function get_url_edit()
+    {
+        return $_MIDCOM->dispatcher->generate_url('page_edit', array());
+    }
+
     public function populate_toolbar()
     {
     }

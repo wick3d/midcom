@@ -51,9 +51,14 @@ class net_nemein_news_controllers_article extends midcom_core_controllers_basecl
         $this->object->topic = $data['topic']->id;
     }
     
-    public function get_object_url()
+    public function get_url_show()
     {
         return $_MIDCOM->dispatcher->generate_url('show', array('name' => $this->object->name));
+    }
+
+    public function get_url_edit()
+    {
+        return $_MIDCOM->dispatcher->generate_url('edit', array('name' => $this->object->name));
     }
     
     public function populate_toolbar()

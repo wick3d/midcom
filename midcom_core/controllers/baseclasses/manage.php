@@ -38,7 +38,14 @@ abstract class midcom_core_controllers_baseclasses_manage
      *
      * @return string Object URL
      */
-    abstract public function get_object_url();
+    abstract public function get_url_show();
+
+    /**
+     * Method for generating route to editing the object
+     *
+     * @return string Object URL
+     */    
+    abstract public function get_url_edit();
     
     abstract public function populate_toolbar();
     
@@ -72,6 +79,20 @@ abstract class midcom_core_controllers_baseclasses_manage
         $this->load_object($args);
         $this->load_datamanager($data, $this->configuration->get('schemadb'));
         $data['object'] =& $this->object;
+        
+        if ($_MIDCOM->authorization->can_do('midgard:update', $data['object']))
+        {
+            $_MIDCOM->head->add_link_head
+            (
+                array
+                (
+                    'rel' => 'alternate',
+                    'type' => 'application/x-wiki',
+                    'title' => 'Edit this page!', // TODO: l10n and object type
+                    'href' => $this->get_url_edit(),
+                )
+            );
+        }
      
         $this->populate_toolbar();
     }
@@ -104,7 +125,7 @@ abstract class midcom_core_controllers_baseclasses_manage
         catch (midcom_helper_datamanager_exception_save $e)
         {
             // TODO: add uimessage of $e->getMessage();
-            header('Location: ' . $this->get_object_url());
+            header('Location: ' . $this->get_url_show());
             exit();
         }
 
@@ -140,7 +161,7 @@ abstract class midcom_core_controllers_baseclasses_manage
         catch (midcom_helper_datamanager_exception_datamanager $e)
         {
             // TODO: add uimessage of $e->getMessage();
-            header('Location: ' . $this->get_object_url());
+            header('Location: ' . $this->get_url_show());
             exit();
         }
         
