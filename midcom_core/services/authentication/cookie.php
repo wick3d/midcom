@@ -15,7 +15,7 @@
  *
  * @package midcom_service_sessionauth
  */
-class midcom_service_sessionauth_cookie
+class midcom_core_services_authentication_cookie
 {
     private $_cookie_id = 'midcom_services_auth_backend_simple-';
     protected $session_id = null;
@@ -64,7 +64,7 @@ class midcom_service_sessionauth_cookie
                     $this->_cookie_id,
                     "{$this->session_id}-{$this->user_id}",
                     0,
-                    @$GLOBALS['midcom_config']['auth_backend_simple_cookie_path']
+                    $_MIDCOM->configuration->services_authentication_cookie_cookiepath
                 );
     }
     
@@ -80,7 +80,7 @@ class midcom_service_sessionauth_cookie
                     $this->_cookie_id,
                     false,
                     0,
-                    @$GLOBALS['midcom_config']['auth_backend_simple_cookie_path']
+                    $_MIDCOM->configuration->services_authentication_cookie_cookiepath
                 );
     }
     
