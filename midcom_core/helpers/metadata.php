@@ -103,13 +103,22 @@ class midcom_core_helpers_metadata
         {
             $person = $_MIDCOM->authentication->get_person();
             $object->metadata->locker = $person->guid;
+            
+            if (is_null($token))
+            {
+                $token = $person->guid;
+            }
         }
 
         $approved = midcom_core_helpers_metadata::is_approved(&$object);
 
         $object->update();
         
-        if (!is_null($token))
+        if (is_null($token))
+        {
+            $object->set_parameter('midcom_core_helper_metadata', 'lock_token', '');
+        }
+        else
         {
             $object->set_parameter('midcom_core_helper_metadata', 'lock_token', $token);
         }
@@ -145,6 +154,8 @@ class midcom_core_helpers_metadata
         
         $object->metadata->locked = '';
         $object->metadata->locker = '';
+        
+        $object->set_parameter('midcom_core_helper_metadata', 'lock_token', '');
 
         $approved = midcom_core_helpers_metadata::is_approved(&$object);
         
