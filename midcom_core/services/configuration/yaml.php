@@ -84,21 +84,15 @@ class midcom_core_services_configuration_yaml implements midcom_core_services_co
     {
         $mc = midgard_parameter::new_collector('parentguid', $object->guid);
         $mc->add_constraint('domain', '=', $this->component);
+        $mc->add_constraint('name', '=', 'configuration');
         $mc->add_constraint('value', '<>', '');
         $mc->set_key_property('guid');
-        $mc->add_value_property('name');
         $mc->add_value_property('value');
         $mc->execute();
         $guids = $mc->list_keys();
         foreach ($guids as $guid => $array)
         {
-            $key = $mc->get_subkey($guid, 'name');
-            if (!$this->exists($key))
-            {
-                continue;
-            }
-
-            $this->objects[$key] = $mc->get_subkey($guid, 'value');
+            $this->objects = $this->unserialize($mc->get_subkey($guid, 'value'));
         }
     }
 

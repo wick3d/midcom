@@ -76,6 +76,7 @@ class midcom_core_services_dispatcher_midgard2 extends midcom_core_services_disp
         
         $_MIDCOM->context->page = $page_data;
         $_MIDCOM->context->prefix = $prefix;
+        $_MIDCOM->context->host = $_MIDGARD_CONNECTION->request_config->host;
         
         // Append styles from context
         $_MIDCOM->templating->append_style($_MIDGARD_CONNECTION->request_config->style->id);

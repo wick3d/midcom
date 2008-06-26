@@ -84,6 +84,9 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         
         $_MIDCOM->context->page = $page_data;
         $_MIDCOM->context->prefix = $_MIDGARD['self'];
+        $host = new midgard_host();
+        $host->get_by_id($_MIDGARD['host']);
+        $_MIDCOM->context->host = $host;
         
         // Append styles from context
         $_MIDCOM->templating->append_style($style_id);
