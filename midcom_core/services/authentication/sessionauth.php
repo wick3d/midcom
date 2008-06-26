@@ -148,6 +148,16 @@ class midcom_core_services_authentication_sessionauth implements midcom_core_ser
      */
     public function logout()
     {
+        $qb = new midgard_query_builder('midcom_core_login_session_db');
+        $qb->add_constraint('guid', '=', $this->session_cookie->get_session_id());
+        $res = $qb->execute();
+        $this->session_cookie->delete_login_session_cookie();
+        if (! $res)
+        {
+            return false;
+        }        
+        $res[0]->delete();
+        $res[0]->purge();
         return true;
     }
     
