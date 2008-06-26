@@ -1,4 +1,4 @@
-services_authentication: midcom_core_services_authentication_basic
+services_authentication: midcom_core_services_authentication_sessionauth
 services_authorization: midcom_core_services_authorization_simple
 services_templating: midcom_core_services_templating_midgard
 services_sessioning: midcom_core_services_sessioning_midgard
@@ -68,3 +68,12 @@ routes:
         action: messages
         route: /__midcom/comet/messages
         content_entry_point: midcom-comet-messages
+    login:
+        controller: midcom_core_controllers_authentication
+        action: login
+        route: /__midcom/login
+        content_entry_point: midcom-authentication-form
+    logout:
+        controller: midcom_core_controllers_authentication
+        action: logout
+        route: /__midcom/logout

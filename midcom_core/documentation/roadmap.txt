@@ -9,16 +9,15 @@ MidCOM 3 Roadmap
 * WebDAV for page management
 * Basic authentication (DONE)
 * Cookie authentication (DONE)
+* Owner-based authorization provider (DONE)
 
 # 3.0.0alpha2
 
 * Package management (PEAR or Git)
 * l10n service
 * Component extension support
-* Owner-based authorization provider
 * Metadata service
 * Cache service
-* Root-only routes support
 
 # 3.0.0alpha3
 
