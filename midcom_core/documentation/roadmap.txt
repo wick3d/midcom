@@ -8,7 +8,7 @@ MidCOM 3 Roadmap
 * Released as simple tarball
 * WebDAV for page management
 * Basic authentication (DONE)
-* Cookie authentication
+* Cookie authentication (DONE)
 
 # 3.0.0alpha2
 
