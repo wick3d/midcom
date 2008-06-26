@@ -48,6 +48,16 @@ routes:
         action: delete
         route: /__midcom/delete
         content_entry_point: midcom-delete-page
+    page_configure:
+        controller: midcom_core_controllers_configuration
+        action: configure
+        route: /__midcom/configure
+        content_entry_point: midcom-configure-page
+    component_configure:
+        controller: midcom_core_controllers_configuration
+        action: configure
+        route: /__midcom/configure/{$component}/
+        content_entry_point: midcom-configure-component
     midcom_about:
         controller: midcom_core_controllers_about
         action: about

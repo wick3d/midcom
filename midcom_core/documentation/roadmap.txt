@@ -18,6 +18,7 @@ MidCOM 3 Roadmap
 * Owner-based authorization provider
 * Metadata service
 * Cache service
+* Root-only routes support
 
 # 3.0.0alpha3
 
