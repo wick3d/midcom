@@ -185,7 +185,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         if (!$this->route_matches($route_id_map))
         {
             // TODO: Check message
-            throw new midcom_exception_notfound('No route matches');
+            throw new midcom_exception_notfound('No route matches current URL');
         }
         unset($route_id_map);
 
