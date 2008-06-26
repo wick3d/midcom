@@ -1,6 +1,0 @@
-routes:
-    index:
-        controller: midcom_service_sessionauth_controllers_index
-        action: index
-        route: /
-        content_entry_point: mss-show-index
