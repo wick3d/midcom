@@ -28,14 +28,14 @@ class midcom_core_services_configuration_yaml implements midcom_core_services_co
         
         if ($object)
         {
-            $this->load_objects($object);            
+            $this->objects = $this->load_objects($object->guid);            
             $this->merged = array_merge($this->merged, $this->objects);
         }
         
         if (!is_array($this->merged))
         {
             // Safety
-            $this->merged= array();
+            $this->merged = array();
         }
 
     }
@@ -80,9 +80,9 @@ class midcom_core_services_configuration_yaml implements midcom_core_services_co
         }
     }
     
-    private function load_objects($object)
+    private function load_objects($object_guid)
     {
-        $mc = midgard_parameter::new_collector('parentguid', $object->guid);
+        $mc = midgard_parameter::new_collector('parentguid', $object_guid);
         $mc->add_constraint('domain', '=', $this->component);
         $mc->add_constraint('name', '=', 'configuration');
         $mc->add_constraint('value', '<>', '');
@@ -92,8 +92,13 @@ class midcom_core_services_configuration_yaml implements midcom_core_services_co
         $guids = $mc->list_keys();
         foreach ($guids as $guid => $array)
         {
-            $this->objects = $this->unserialize($mc->get_subkey($guid, 'value'));
+            $objects = $this->unserialize($mc->get_subkey($guid, 'value'));
+            if (is_array($objects))
+            {
+                return $objects;
+            }
         }
+        return array();
     }
 
     /**

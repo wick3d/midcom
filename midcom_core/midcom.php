@@ -169,8 +169,33 @@ class midcom_core_midcom
         $services_toolbars_implementation = $this->configuration->get('services_toolbars');
         $this->toolbar = new $services_toolbars_implementation($this->configuration->get('services_toolbars_configuration'));
 
-        $_MIDCOM->templating->append_directory(MIDCOM_ROOT . '/midcom_core/templates');        
+        // Set up templating and environment        
+        $_MIDCOM->templating->append_directory(MIDCOM_ROOT . '/midcom_core/templates');
         $this->dispatcher->populate_environment_data();
+
+        switch ($_SERVER['REQUEST_METHOD'])
+        {
+            case 'GET':
+            case 'POST':
+                // GET and POST are handled by regular dispatcher
+                $this->process_dispatcher();
+                break;
+            default:
+                // Handle WebDAV methods
+                $webdav_server = new midcom_core_helpers_webdav();
+                $webdav_server->serve();
+                break;
+        }
+        
+        if ($this->timer)
+        {
+            $this->timer->setMarker('MidCOM::process ended');
+        }
+    }
+        
+    private function process_dispatcher()
+    {
+        // Load component
         try
         {
             $component = $this->context->get_item('component');
@@ -197,17 +222,18 @@ class midcom_core_midcom
         {
             $this->dispatcher->dispatch();
         }
+        catch (midcom_exception_notfound $exception)
+        {
+            $webdav_server = new midcom_core_helpers_webdav();
+            $webdav_server->serve();
+        }
         catch (midcom_exception_unauthorized $exception)
         {
             // Pass the exception to authentication handler
             $_MIDCOM->authentication->handle_exception($exception);
         }
 
-        header('Content-Type: ' . $this->context->get_item('mimetype'));
-        if ($this->timer)
-        {
-            $this->timer->setMarker('MidCOM::process ended');
-        }
+        header('Content-Type: ' . $this->context->mimetype);
     }
 }
 ?>

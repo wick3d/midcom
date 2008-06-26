@@ -31,6 +31,7 @@ class midcom_core_exceptionhandler
         }
 
         $message = $exception->getMessage();
+        header("X-MidCOM-Error: {$message}");
 
         if (headers_sent())
         {

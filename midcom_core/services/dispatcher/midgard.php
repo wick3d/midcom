@@ -44,7 +44,15 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         $arg_string = substr($_MIDGARD['uri'], strlen($_MIDGARD['self']));
         if ($arg_string)
         {
-            $this->argv = explode('/', $arg_string);
+            $argv = explode('/', $arg_string);
+            foreach ($argv as $arg)
+            {
+                if (empty($arg))
+                {
+                    continue;
+                }
+                $this->argv[] = $arg;
+            }
         }
     }
 
