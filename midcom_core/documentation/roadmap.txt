@@ -1,0 +1,38 @@
+MidCOM 3 Roadmap
+================
+
+# 3.0.0alpha1 - July 2008
+
+* Component API
+* MVC API
+* Released as simple tarball
+* WebDAV for page management
+* Basic and Cookie authentication
+
+# 3.0.0alpha2
+
+* Package management (PEAR or Git)
+* l10n service
+* Component extension support
+* Owner-based authorization provider
+* Metadata service
+
+# 3.0.0alpha3
+
+* Component-specific WebDAV extension
+* ACL-based authorization provider
+* Attachment support
+* Permanent linking support
+
+# 3.0.0beta1
+
+* Style editor
+* Schema editor
+* Configuration editor
+* Route editor
+* OpenID authentication
+* OAuth autentication
+
+# 3.0.0beta2
+
+* MgdSchema API REST wrapper
