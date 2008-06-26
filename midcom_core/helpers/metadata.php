@@ -49,14 +49,14 @@ class midcom_core_helpers_metadata
         $object->update();
     }
     
-    public static function is_locked(&$object)
+    public static function is_locked(&$object, $check_locker = true)
     {
         if (empty($object->metadata->locked))
         {
             return false;
         }
         
-        $lock_time = strtotime($object->metadata->locked);
+        $lock_time = strtotime($object->metadata->locked . ' GMT');
         $lock_timeout = $lock_time + ($_MIDCOM->configuration->get('metadata_lock_timeout') * 60);
         
         if (time() > $lock_timeout)
@@ -66,11 +66,21 @@ class midcom_core_helpers_metadata
             return false;
         }
         
+        if (   empty($object->metadata->locker)
+            && $check_locker)
+        {
+            // Shared lock
+            return false;
+        }
+        
         if ($_MIDCOM->authentication->is_user())
         {
             $person = $_MIDCOM->authentication->get_person();
             
-            if ($object->metadata->locker == $person->guid)
+            if (    $check_locker
+                &&  (   $object->metadata->locker == $person->guid
+                     || $object->metadata->locker == '')
+                )
             {
                 // If you locked it yourself, you can also edit it
                 return false;
@@ -80,13 +90,16 @@ class midcom_core_helpers_metadata
         return true;
     }
     
-    public static function lock(&$object)
+    public static function lock(&$object, $shared = false, $token = null)
     {
         $_MIDCOM->authorization->require_do('midgard:update', $object);
-
         $object->metadata->locked = gmstrftime('%Y-%m-%d %T', time());
 
-        if ($_MIDCOM->authentication->is_user())
+        if ($shared)
+        {
+            $object->metadata->locker = '';
+        }
+        elseif ($_MIDCOM->authentication->is_user())
         {
             $person = $_MIDCOM->authentication->get_person();
             $object->metadata->locker = $person->guid;
@@ -95,6 +108,11 @@ class midcom_core_helpers_metadata
         $approved = midcom_core_helpers_metadata::is_approved(&$object);
 
         $object->update();
+        
+        if (!is_null($token))
+        {
+            $object->set_parameter('midcom_core_helper_metadata', 'lock_token', $token);
+        }
 
         if ($approved)
         {

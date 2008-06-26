@@ -88,6 +88,7 @@ class midcom_core_exceptionhandler
             304 => 'HTTP/1.0 304 Not Modified',
             401 => 'HTTP/1.0 401 Unauthorized',
             404 => 'HTTP/1.0 404 Not Found',
+            405 => 'HTTP/1.0 405 Method not allowed',
             500 => 'HTTP/1.0 500 Server Error',
             503 => 'HTTP/1.0 503 Service Unavailable',
         );

@@ -6,7 +6,11 @@
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License
  */
 
+// We use the PEAR WebDAV server class
 require 'HTTP/WebDAV/Server.php';
+
+// The PATH_INFO needs to be provided so that creates will work
+$_SERVER['PATH_INFO'] = $_MIDCOM->context->uri;
 
 /**
  * WebDAV server for MidCOM 3
@@ -42,6 +46,8 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
         
         // let the base class do all the work
         parent::ServeRequest();
+        $this->add_to_log("Path was: {$this->path}");
+        flush();
         die();
     }
 
@@ -54,46 +60,23 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      */
     function PROPFIND(&$options, &$files) 
     {
-        // get topic/document path
-        $path = $options['path'];
+        $_MIDCOM->authorization->require_user();
+    
+        $info = $this->get_path_info();
         
-        $resource = 'page';
-        
-        if ($_MIDCOM->context->page['id'] == $_MIDCOM->context->host->root)
+        if (is_null($info['object']))
         {
-        
-            if ($_MIDCOM->dispatcher->argv[0] == '__snippets')
-            {
-                $resource = 'snippetdir';
-                
-                if (count($_MIDCOM->dispatcher->argv) > 1)
-                {
-                }
-                else
-                {
-                    $this->get_files_snippetdir(0, &$files);
-                }
-            }
+            $this->add_to_log("404 Not Found");
+            throw new midcom_exception_notfound("Not found");
+        }
 
-            if ($resource == 'page')
-            {
-                /*
-                // Add pseudo-folders to root
-                // Snippetdir folder
-                $snippets = $this->get_files_stub();
-                $snippets['props'][] = $this->mkprop('displayname', 'Code Snippets');
-                $snippets['props'][] = $this->mkprop('resourcetype', 'collection');
-                $snippets['props'][] = $this->mkprop('getcontenttype', 'httpd/unix-directory');
-                $snippets['path'] = "{$_MIDCOM->context->prefix}__snippets/";
-                $files['files'][] = $snippets;
-                */
-            }
-        }
-        
-        if ($resource == 'page')
+        /*if (substr($_MIDCOM->dispatcher->argv[0], 0, 1) == '.')
         {
-            $this->get_files_page($_MIDCOM->context->page, &$files);
-        }
+            $this->add_to_log("Skipping dotfile, object is {$info['object']->guid}");
+            throw new midcom_exception_notfound("No dotfiles please");
+        }*/
+
+        $this->get_files_page($info['object'], &$files);
         
         return true;
     }
@@ -102,13 +85,15 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
     {
         // Add the downloadable page itself
         $conf = $this->get_files_stub();
-        $conf['props'][] = $this->mkprop('displayname', $page['title']);
+        $conf['props'][] = $this->mkprop('displayname', $page->title);
         $conf['props'][] = $this->mkprop('resourcetype', '');
         $conf['props'][] = $this->mkprop('getcontenttype', 'text/html');
-        $conf['path'] = "{$_MIDCOM->context->prefix}content.html";
+        $conf['props'][] = $this->mkprop('getcontentlength', strlen($page->content));
+        $conf['props'][] = $this->mkprop('getlastmodified', strtotime($page->metadata->revised));
+        $conf['path'] = "{$_MIDCOM->context->prefix}__content.html";
         $files['files'][] = $conf;
     
-        $mc = midgard_page::new_collector('up', $page['id']);
+        $mc = midgard_page::new_collector('up', $page->id);
         $mc->set_key_property('name');
         $mc->add_value_property('title');
         $mc->execute();
@@ -127,25 +112,6 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
             $subpage['path'] = "{$_MIDCOM->context->prefix}{$name}/";
             $files['files'][] = $subpage;
         }
-        
-        /*
-        $mc = midgard_parameter::new_collector('parentguid', $page['guid']);
-        $mc->add_constraint('domain', '=', $_MIDCOM->context->component);
-        $mc->add_constraint('name', '=', 'configuration');
-        $mc->add_constraint('value', '<>', '');
-        $mc->set_key_property('guid');
-        $mc->execute();
-        $guids = $mc->list_keys();
-        foreach ($guids as $guid => $array)
-        {
-            $conf = $this->get_files_stub();
-            $conf['props'][] = $this->mkprop('displayname', "{$_MIDCOM->context->component} configuration");
-            $conf['props'][] = $this->mkprop('resourcetype', '');
-            $conf['props'][] = $this->mkprop('getcontenttype', 'text/yaml');
-            $conf['path'] = "{$_MIDCOM->context->prefix}configuration.yml";
-            $files['files'][] = $conf;
-        }
-        */
     }
     
     /*
@@ -189,11 +155,24 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      */
     function GET(&$options) 
     {
-        if ($_MIDCOM->dispatcher->argv[0] == 'content.html')
+        $info = $this->get_path_info();
+        
+        if (is_null($info['object']))
         {
-            $page = new midgard_page($_MIDCOM->context->page['guid']);
-            $options['data'] = $page->content;
-            return true;
+            throw new midcom_exception_notfound("Not found");
+        }
+
+        $_MIDCOM->authorization->require_user();
+
+        switch ($info['variant'])
+        {
+            case 'content_html':
+                $options['data'] = $info['object']->content;
+                $options['mimetype'] = 'text/html';
+                $options['mtime'] = $info['object']->metadata->revised;
+                return true;
+            default:
+                throw new midcom_exception_notfound("Not found");
         }
         
         throw new midcom_exception_notfound('No route matches current URL');
@@ -207,16 +186,144 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      */
     function PUT(&$options) 
     {
-        if ($_MIDCOM->dispatcher->argv[0] == 'content.html')
+        $info = $this->get_path_info($options['path']);
+
+        if (is_null($info['object']))
         {
-            $this->add_to_log("PUT content.html");
-            $page = new midgard_page($_MIDCOM->context->page['guid']);
-            $page->content = file_get_contents('php://input');
-            $this->add_to_log($page->content);
-            $page->update();
+            // Creation support
+            if (is_null($info['parent']))
+            {
+                $this->add_to_log("No parent known");
+                throw new midcom_exception_notfound("Not found");
+            }
             
-            return true;
+            $_MIDCOM->authorization->require_do('midgard:create', $info['parent']);
+            
+            $this->add_to_log("Trying to create {$options['path']}.");
+            
+            $file_type = pathinfo($options['path'], PATHINFO_EXTENSION);
+            switch ($file_type)
+            {
+                case 'html':
+                    $info['object'] = $info['parent'];
+                    $info['variant'] = 'content_html';
+                    break;
+                default:
+                    return "415 Unsupported media type";
+            }
         }
+        
+        $_MIDCOM->authorization->require_user();
+        
+        $_MIDCOM->authorization->require_do('midgard:update', $info['object']);
+        
+        switch ($info['variant'])
+        {
+            case 'content_html':
+                $info['object']->content = file_get_contents('php://input');
+                $info['object']->update();
+                return true;
+            default:        
+                return '405 Method Not Allowed';
+        }
+    }
+
+    /**
+     * MKCOL method handler
+     *
+     * @param  array  general parameter passing array
+     * @return bool   true on success
+     */
+    public function MKCOL($options)
+    {
+        $info = $this->get_path_info($options['path']);
+        
+        if (!is_null($info['object']))
+        {
+            return '405 Method not allowed';
+        }
+        
+        // Creation support
+        if (is_null($info['parent']))
+        {
+            $this->add_to_log("No parent known");
+            throw new midcom_exception_notfound("Not found");
+        }
+        
+        $_MIDCOM->authorization->require_do('midgard:create', $info['parent']);
+        
+        $this->add_to_log("Trying to create {$options['path']}");
+        $page = new midgard_page();
+        $page->up = $info['parent']->id;
+        $page->name = basename($options['path']);
+        $page->title = $page->name;
+        if (!$page->create())
+        {
+            return false;
+        }
+        
+        return '201 Created';
+    }
+
+    /**
+     * LOCK method handler
+     *
+     * @param  array  general parameter passing array
+     * @return bool   true on success
+     */
+    function LOCK(&$options) 
+    {
+        $this->add_to_log("Options: " . serialize($options));
+        $info = $this->get_path_info();
+
+        $shared = false;
+        if ($options['scope'] == 'shared')
+        {
+            $shared = true;
+        }
+        
+        if (is_null($info['object']))
+        {
+            throw new midcom_exception_notfound("Not found");
+        }
+        
+        if (midcom_core_helpers_metadata::is_locked($info['object']))
+        {
+            $this->add_to_log("Object is locked by another user");
+            return "423 Locked";
+        }
+
+        midcom_core_helpers_metadata::lock($info['object'], $shared, $options['locktoken']);
+        $options['timeout'] = time() + $_MIDCOM->configuration->get('metadata_lock_timeout');
+        
+        return "200 OK";
+    }
+    
+    /**
+     * UNLOCK method handler
+     *
+     * @param  array  general parameter passing array
+     * @return bool   true on success
+     */
+    function UNLOCK(&$options) 
+    {
+        $info = $this->get_path_info();
+        
+        if (is_null($info['object']))
+        {
+            throw new midcom_exception_notfound("Not found");
+        }
+        
+        if (midcom_core_helpers_metadata::is_locked($info['object']))
+        {
+            $this->add_to_log("Object is locked by another user {$info['object']->metadata->locker}");
+            return "423 Locked";
+        }
+
+        $this->add_to_log("Unlocking");
+        midcom_core_helpers_metadata::unlock($info['object']);
+
+        return "200 OK";
     }
 
     /**
@@ -228,8 +335,15 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      * @param  string  Password
      * @return bool    true on successful authentication
      */
-    function check_auth($type, $user, $pass)
+    function checkAuth($type, $user, $pass)
     {
+        if (!$_MIDCOM->authentication->is_user())
+        {
+            if (!$_MIDCOM->authentication->login($username, $password))
+            {
+                return false;
+            }
+        }
         return true;
     }
 
@@ -241,7 +355,125 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      */
     function checkLock($path) 
     {
-        return true;
+        $this->add_to_log("checkLock {$path}");
+        $info = $this->get_path_info($path);
+        if (is_null($info['object']))
+        {
+            $this->add_to_log("{$path} Not Found");
+            return false;
+        }
+        
+        if (!midcom_core_helpers_metadata::is_locked($info['object'], false))
+        {
+            $this->add_to_log("Not locked, locked = {$info['object']->metadata->locked}, locker = {$info['object']->metadata->locker}");
+            return false;
+        }
+
+        // Populate lock info from metadata
+        $lock = array
+        (
+            'type' => 'write',
+            'scope' => 'shared',
+            'depth' => 0,
+            'owner' => $info['object']->metadata->locker,
+            'created' => strtotime($info['object']->metadata->locked  . ' GMT'),
+            'modified' => strtotime($info['object']->metadata->locked . ' GMT'),
+            'expires' => strtotime($info['object']->metadata->locked . ' GMT') + $_MIDCOM->configuration->get('metadata_lock_timeout') * 60,
+        );
+        
+        if ($info['object']->metadata->locker)
+        {
+            $lock['scope'] = 'exclusive';
+        }
+        
+        $lock_token = $info['object']->parameter('midcom_core_helper_metadata', 'lock_token');
+        if ($lock_token)
+        {
+            $lock['token'] = $lock_token;
+        }
+        
+        $this->add_to_log(serialize($lock));
+        return $lock;
+    }
+    
+    private function get_path_info($path = null)
+    {
+        if (is_null($path))
+        {
+            $local_path = implode('/', $_MIDCOM->dispatcher->argv);
+            $this->add_to_log("Get path info \"{$local_path}\" from ARGV");
+        }
+        else
+        {
+            $local_path = substr($path, strlen($_MIDCOM->context->prefix));
+            $this->add_to_log("Get path info \"{$local_path}\" from OPTIONS");
+        }
+        $path = $local_path;
+        
+        static $info = array();
+        if (isset($info[$path]))
+        {
+            return $info[$path];
+        }
+        
+        $current_page = new midgard_page($_MIDCOM->context->page['guid']);
+        
+        $argv = array();
+        $args = explode('/', $path);
+        foreach ($args as $arg)
+        {
+            if (empty($arg))
+            {
+                continue;
+            }
+            $argv[] = $arg;
+        }
+        
+        $info[$path] = array
+        (
+            'object' => null,
+            'parent' => null,
+            'variant' => 'default',
+        );
+        
+        /*if ($_MIDCOM->context->page['id'] == $_MIDCOM->context->host->root)
+        {
+            // We're at MidCOM host root page, handle special URL cases
+        }*/
+
+        if (count($argv) == 0)
+        {
+            $info[$path]['object'] = $current_page;
+            $info[$path]['variant'] = 'collection';
+            return $info[$path];
+        }
+
+        if (count($argv) == 1)
+        {
+            // Only one argument, check it
+            if ($argv[0] == '__content.html')
+            {
+                $info[$path]['object'] = $current_page;
+                $info[$path]['variant'] = 'content_html';
+                return $info[$path];
+            }
+            else
+            {
+                $info[$path]['parent'] = $current_page;
+                $qb = midgard_page::new_query_builder();
+                $qb->add_constraint('up', '=', $current_page->id);
+                $qb->add_constraint('name', '=', $argv[0]);
+                $pages = $qb->execute();
+                if (count($pages) > 0)
+                {
+                    $info[$path]['object'] = $pages[0];
+                    $info[$path]['variant'] = 'collection';
+                    return $info[$path];
+                }
+            }
+        }
+        
+        return $info[$path];
     }
 
     /**

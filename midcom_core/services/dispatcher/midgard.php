@@ -92,6 +92,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         
         $_MIDCOM->context->page = $page_data;
         $_MIDCOM->context->prefix = $_MIDGARD['self'];
+        $_MIDCOM->context->uri = $_MIDGARD['uri'];
         $host = new midgard_host();
         $host->get_by_id($_MIDGARD['host']);
         $_MIDCOM->context->host = $host;
