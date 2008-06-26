@@ -37,15 +37,8 @@ class midcom_core_services_cache_sqlite implements midcom_core_services_cache
             /**
              * Creating table for tags
              */
-            $this->_db->query("CREATE TABLE {$this->_table}_tags (id INTEGER PRIMARY KEY, tag VARCHAR(255));");
-            $this->_db->query("CREATE INDEX {$this->_table}_tags ON {$this->_table}_tags (tag);");
-            
-            /**
-             * Creating table for lookup
-             */
-            $this->_db->query("CREATE TABLE {$this->_table}_key_tags_lookup (tag_id INTEGER, key VARCHAR(255));");
-            $this->_db->query("CREATE INDEX {$this->_table}_key_tags_lookup_key ON {$this->_table}_key_tags_lookup (tag_id), {$this->_table}_tags (key);");
-        
+            $this->_db->query("CREATE TABLE {$this->_table}_tags (key VARCHAR(255), tag VARCHAR(255));");
+            $this->_db->query("CREATE INDEX {$this->_table}_tags ON {$this->_table}_tags (key, tag);");
         }
     }
     
@@ -70,18 +63,18 @@ class midcom_core_services_cache_sqlite implements midcom_core_services_cache
             foreach ($tags as $tag)
             {
                 $tag = sqlite_escape_string($tag);
-                $constraint .= "{$this->_table}_key_tags.tag='{$tag}' OR ";
+                $constraint .= "{$this->_table}_tags.tag='{$tag}' OR ";
             }
             $constraint = substr($constraint, 0, strlen($constraint) - 3);
-        }else
+        }
+        else
         {
             $tags = sqlite_escape_string($tags);
-            $constraint = "{$this->_table}_key_tags.tag='{$tag}'";
+            $constraint = "{$this->_table}_tags.tag='{$tag}'";
         }
         // Making a query
         $query = ("SELECT {$this->_table}.key AS key, {$this->_table}.value AS value FROM {$this->_table}
-        LEFT JOIN {$this->_table}_key_tags_lookup ON {$this->_table}_key_tags_lookup.key={$this->_table}.key
-        LEFT JOIN {$this->_table}_tags ON {$this->_table}_tags.id={$this->_table}_key_tags_lookup.tag_id
+        LEFT JOIN {$this->_table}_tags ON {$this->_table}_tags.key={$this->_table}.key
         WHERE $constraint
         ");
         
@@ -108,14 +101,14 @@ class midcom_core_services_cache_sqlite implements midcom_core_services_cache
                 {
                     $tag = sqlite_escape_string($tag);
                     $tag_id = $this->checktag($tag);
-                    $this->_db->query("REPLACE INTO {$this->_table}_key_tags_lookup (tag_id, key) VALUES ('{$tag_id}', '{$key}')");
+                    $this->_db->query("REPLACE INTO {$this->_table}_tags (tag, key) VALUES ('{$tag}', '{$key}')");
                 }
             }
-            else 
+            else
             {
                 $tags = sqlite_escape_string($tags);
                 $tag_id = $this->checktag($tags);
-                $this->_db->query("REPLACE INTO {$this->_table}_key_tags_lookup (tag_id, key) VALUES ('{$tag_id}', '{$key}')");
+                $this->_db->query("REPLACE INTO {$this->_table}_tags (tag, key) VALUES ('{$tag}', '{$key}')");
             }
         }
     }
@@ -123,31 +116,54 @@ class midcom_core_services_cache_sqlite implements midcom_core_services_cache
     public function remove($key)
     {
         $key = sqlite_escape_string($key);
-        $this->_db->query("DELETE FROM {$this->_table} WHERE key='{$key}'");    
-        $this->_db->query("DELETE FROM {$this->_table}_key_tags_lookup WHERE key='{$key}'");
+        $this->_db->query("DELETE FROM {$this->_table} WHERE key='{$key}'");
+        $this->_db->query("DELETE FROM {$this->_table}_tags WHERE key='{$key}'");
     }
     
-    
-    /**
-     * Checks if given tag is already created. A key of the tag is returned
-     *
-     * @param string $tag
-     * @return integer tag_id
-     */
-    private function checktag($tag)
+    public function remove_by_tags($tags)
     {
-        $results = $this->_db->query("SELECT id FROM {$this->_table}_tags WHERE tag='{$tag}'");
-        $results = $results->fetchAll();
-        if (count($results) == 0)
+        if (is_array($tags))
         {
-            // making new tag and getting it's id
-            $this->_db->query("REPLACE INTO {$this->_table}_tags (tag) VALUES ('{$tag}')");
-            $result = $this->_db->query("SELECT last_insert_rowid() AS id");
-            $results = $results->fetchAll();
-        
+            foreach ($tags as $tag)
+            {
+                $tag = sqlite_escape_string($tag);
+                $results = $this->_db->query("SELECT key FROM {$this->_table}_tags WHERE tag='{$tag}'");
+                $results = $results->fetchAll();
+                foreach ($results as $r)
+                {
+                    $this->_db->query("DELETE FROM {$this->_table} WHERE key='{$r['key']}");
+                    $this->_db->query("DELETE FROM {$this->_table}_tags WHERE key='{$r['key']}'");
+                }
+            }
         }
-        return $results[0]['id'];
+        else
+        {
+            $tags = sqlite_escape_string($tags);
+            $results = $this->_db->query("SELECT key FROM {$this->_table}_tags WHERE tag='{$tags}'");
+            $results = $results->fetchAll();
+            foreach ($results as $r)
+            {
+                $this->_db->query("DELETE FROM {$this->_table} WHERE key='{$r['key']}");
+                $this->_db->query("DELETE FROM {$this->_table}_tags WHERE key='{$r['key']}'");
+            }
+        }
     }
 
+    public function remove_all()
+    {
+        $this->_db->query("DELETE FROM {$this->_table} WHERE 1");
+        $this->_db->query("DELETE FROM {$this->_table}_tags WHERE 1");
+    }
+    
+    public function exists($key)
+    {
+        if($this->get($key) == false)
+        {
+            return false;
+        }
+        return true;
+    }
+    
+    
 }
 ?>
