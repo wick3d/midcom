@@ -181,9 +181,12 @@ class midcom_core_midcom
                 $this->process_dispatcher();
                 break;
             default:
-                // Handle WebDAV methods
-                $webdav_server = new midcom_core_helpers_webdav();
-                $webdav_server->serve();
+                if ($this->configuration->get('enable_webdav'))
+                {
+                    // Handle WebDAV methods
+                    $webdav_server = new midcom_core_helpers_webdav();
+                    $webdav_server->serve();
+                }
                 break;
         }
         
@@ -224,8 +227,12 @@ class midcom_core_midcom
         }
         catch (midcom_exception_notfound $exception)
         {
-            $webdav_server = new midcom_core_helpers_webdav();
-            $webdav_server->serve();
+            if ($this->configuration->get('enable_webdav'))
+            {
+                $webdav_server = new midcom_core_helpers_webdav();
+                $webdav_server->serve();
+            }
+            throw $exception;
         }
         catch (midcom_exception_unauthorized $exception)
         {

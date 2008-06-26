@@ -7,6 +7,7 @@ services_toolbars: midcom_core_services_toolbars_float
 services_authentication_cookie_cookiepath: /
 services_l10n: midcom_core_services_l10n_gettext
 cache_directory: __MIDGARDCACHE__/midgard
+enable_webdav: true
 enable_benchmark: false
 enable_included_list: false
 enable_jquery_framework: true
