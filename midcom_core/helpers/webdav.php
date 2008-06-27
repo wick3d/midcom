@@ -11,6 +11,7 @@ require 'HTTP/WebDAV/Server.php';
 
 // The PATH_INFO needs to be provided so that creates will work
 $_SERVER['PATH_INFO'] = $_MIDCOM->context->uri;
+$_SERVER['SCRIPT_NAME'] = $_MIDCOM->context->prefix;
 
 /**
  * WebDAV server for MidCOM 3
@@ -87,6 +88,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
         $this->http_status("200 OK");
         
         // We support DAV levels 1 & 2
+        // header("DAV: 1, 2"); TODO: Re-enable when we support locks
         header("DAV: 1, 2");
         
         header("Content-length: 0");
@@ -101,6 +103,8 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      */
     function PROPFIND(&$options, &$files) 
     {
+        $this->filename_check();
+        
         $_MIDCOM->authorization->require_user();
 
         // Run the controller
@@ -116,17 +120,16 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
             $data['children'] = $this->get_node_children($page);
         }
         
-        if (!empty($data['children']))
-        {
-            // Convert children to PROPFIND elements
-            $this->children_to_files($data['children'], &$files);
-        }
+        // Convert children to PROPFIND elements
+        $this->children_to_files($data['children'], &$files);
         
         return true;
     }
 
     private function children_to_files($children, &$files)
     {
+        $files['files'] = array();
+
         foreach ($children as $child)
         {
             $child_props = array
@@ -155,8 +158,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
             $files['files'][] = $child_props;
         }
     }
-    
-    
+
     private function get_node_children(midgard_page $node)
     {
         // Load children for PROPFIND purposes
@@ -181,16 +183,45 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
             );
         }
         
-        // Additional "special" URLs
-        $children[] = array
-        (
-            'uri'      => "{$_MIDCOM->context->prefix}__snippets/", // FIXME: dispatcher::generate_url
-            'title'    => 'Code Snippets',
-            'mimetype' => 'httpd/unix-directory',
-            'resource' => 'collection',
-        );
-        
+        if ($_MIDCOM->context->page['id'] == $_MIDCOM->context->host->root)
+        {
+            // Additional "special" URLs
+            $children[] = array
+            (
+                'uri'      => "{$_MIDCOM->context->prefix}__snippets/", // FIXME: dispatcher::generate_url
+                'title'    => 'Code Snippets',
+                'mimetype' => 'httpd/unix-directory',
+                'resource' => 'collection',
+            );
+            $children[] = array
+            (
+                'uri'      => "{$_MIDCOM->context->prefix}__styles/", // FIXME: dispatcher::generate_url
+                'title'    => 'Style Templates',
+                'mimetype' => 'httpd/unix-directory',
+                'resource' => 'collection',
+            );
+        }
+
         return $children;
+    }
+
+    /**
+     * Check filename against some stupidity
+     */
+    private function filename_check()
+    {
+        if (!isset($this->action_arguments['variable_arguments']))
+        {
+            return;
+        }
+        
+        $filename = $this->action_arguments['variable_arguments'][count($this->action_arguments['variable_arguments']) - 1];
+        if (   $filename == '.DS_Store'
+            || substr($filename, 0, 2) == '._')
+        {
+            $this->logger->log("Raising 404 for {$filename} because of filename sanity rules");
+            throw new midcom_exception_notfound("OS X DotFiles not allowed");
+        }
     }
 
     /**
@@ -201,31 +232,17 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      */
     function GET(&$options) 
     {
-        $info = $this->get_path_info();
-        
-        if (is_null($info['object']))
-        {
-            throw new midcom_exception_notfound("Not found");
-        }
+        $this->filename_check();
 
         $_MIDCOM->authorization->require_user();
 
-        switch ($info['variant'])
-        {
-            case 'content_html':
-                $options['data'] = $info['object']->content;
-                $options['mimetype'] = 'text/html';
-                $options['mtime'] = $info['object']->metadata->revised;
-                return true;
-            /*case 'object_xml':
-                $options['data'] = $info['object']->serialize();
-                $options['mimetype'] = 'text/xml';
-                $options['mtime'] = $info['object']->metadata->revised;*/
-            default:
-                throw new midcom_exception_notfound("Not found");
-        }
+        // Run the controller
+        $controller = $this->controller;
+        $action_method = $this->action_method;
+        $data =& $options;
+        $controller->$action_method($this->route_id, $data, $this->action_arguments);
         
-        throw new midcom_exception_notfound('No route matches current URL');
+        return true;
     }
 
     /**
@@ -236,46 +253,17 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      */
     function PUT(&$options) 
     {
-        $info = $this->get_path_info($options['path']);
+        $this->filename_check();
 
-        if (is_null($info['object']))
-        {
-            // Creation support
-            if (is_null($info['parent']))
-            {
-                $this->logger->log("No parent known");
-                throw new midcom_exception_notfound("Not found");
-            }
-            
-            $_MIDCOM->authorization->require_do('midgard:create', $info['parent']);
-            
-            $this->logger->log("Trying to create {$options['path']}.");
-            
-            $file_type = pathinfo($options['path'], PATHINFO_EXTENSION);
-            switch ($file_type)
-            {
-                case 'html':
-                    $info['object'] = $info['parent'];
-                    $info['variant'] = 'content_html';
-                    break;
-                default:
-                    return "415 Unsupported media type";
-            }
-        }
-        
         $_MIDCOM->authorization->require_user();
+
+        // Run the controller
+        $controller = $this->controller;
+        $action_method = $this->action_method;
+        $data =& $options;
+        $controller->$action_method($this->route_id, $data, $this->action_arguments);
         
-        $_MIDCOM->authorization->require_do('midgard:update', $info['object']);
-        
-        switch ($info['variant'])
-        {
-            case 'content_html':
-                $info['object']->content = file_get_contents('php://input');
-                $info['object']->update();
-                return true;
-            default:        
-                return '405 Method Not Allowed';
-        }
+        return true;
     }
 
     /**
@@ -296,6 +284,58 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
     }
 
     /**
+     * MOVE method handler
+     *
+     * @param  array  general parameter passing array
+     * @return bool   true on success
+     */
+    function MOVE($options) 
+    {
+        // Run the controller
+        $controller = $this->controller;
+        $action_method = $this->action_method;
+        $data =& $options;
+        $controller->$action_method($this->route_id, $data, $this->action_arguments);
+        
+        return true;
+    }
+
+    /**
+     * COPY method handler
+     *
+     * @param  array  general parameter passing array
+     * @return bool   true on success
+     */
+    function COPY($options) 
+    {
+        // Run the controller
+        $controller = $this->controller;
+        $action_method = $this->action_method;
+        $data =& $options;
+        $controller->$action_method($this->route_id, $data, $this->action_arguments);
+        
+        return true;
+    }
+
+    /**
+     * DELETE method handler
+     *
+     * @param  array  general parameter passing array
+     * @return bool   true on success
+     */
+    function DELETE($options) 
+    {
+        // Run the controller
+        $controller = $this->controller;
+        $action_method = $this->action_method;
+        $data =& $options;
+        $controller->$action_method($this->route_id, $data, $this->action_arguments);
+
+        return "204 No Content";
+    }
+
+
+    /**
      * LOCK method handler
      *
      * @param  array  general parameter passing array
@@ -303,9 +343,9 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      */
     function LOCK(&$options) 
     {
-        $this->logger->log("Options: " . serialize($options));
-        $info = $this->get_path_info();
-
+        $options['timeout'] = time() + $_MIDCOM->configuration->get('metadata_lock_timeout');
+        return "200 OK";
+        /*
         $shared = false;
         if ($options['scope'] == 'shared')
         {
@@ -327,6 +367,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
         $options['timeout'] = time() + $_MIDCOM->configuration->get('metadata_lock_timeout');
         
         return "200 OK";
+        */
     }
     
     /**
@@ -337,44 +378,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      */
     function UNLOCK(&$options) 
     {
-        $info = $this->get_path_info();
-        
-        if (is_null($info['object']))
-        {
-            throw new midcom_exception_notfound("Not found");
-        }
-        
-        if (midcom_core_helpers_metadata::is_locked($info['object']))
-        {
-            $this->logger->log("Object is locked by another user {$info['object']->metadata->locker}");
-            return "423 Locked";
-        }
-
-        $this->logger->log("Unlocking");
-        midcom_core_helpers_metadata::unlock($info['object']);
-
         return "200 OK";
-    }
-
-    /**
-     * No authentication is needed here
-     *
-     * @access private
-     * @param  string  HTTP Authentication type (Basic, Digest, ...)
-     * @param  string  Username
-     * @param  string  Password
-     * @return bool    true on successful authentication
-     */
-    function checkAuth($type, $user, $pass)
-    {
-        if (!$_MIDCOM->authentication->is_user())
-        {
-            if (!$_MIDCOM->authentication->login($username, $password))
-            {
-                return false;
-            }
-        }
-        return true;
     }
 
     /**
@@ -385,14 +389,9 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      */
     function checkLock($path) 
     {
-        $this->logger->log("checkLock {$path}");
-        $info = $this->get_path_info($path);
-        if (is_null($info['object']))
-        {
-            $this->logger->log("{$path} Not Found");
-            return false;
-        }
-        
+        return false;
+
+        /*
         if (!midcom_core_helpers_metadata::is_locked($info['object'], false))
         {
             $this->logger->log("Not locked, locked = {$info['object']->metadata->locked}, locker = {$info['object']->metadata->locker}");
@@ -424,110 +423,28 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
         
         $this->logger->log(serialize($lock));
         return $lock;
-    }
-    
-    private function get_path_info($path = null)
-    {
-        if (is_null($path))
-        {
-            $local_path = implode('/', $_MIDCOM->dispatcher->argv);
-            $this->logger->log("Get path info \"{$local_path}\" from ARGV");
-        }
-        else
-        {
-            $local_path = substr($path, strlen($_MIDCOM->context->prefix));
-            $this->logger->log("Get path info \"{$local_path}\" from OPTIONS");
-        }
-        $path = $local_path;
-        
-        static $info = array();
-        if (isset($info[$path]))
-        {
-            return $info[$path];
-        }
-        
-        $current_page = new midgard_page($_MIDCOM->context->page['guid']);
-        
-        $argv = array();
-        $args = explode('/', $path);
-        foreach ($args as $arg)
-        {
-            if (empty($arg))
-            {
-                continue;
-            }
-            $argv[] = $arg;
-        }
-        
-        $info[$path] = array
-        (
-            'object' => null,
-            'parent' => null,
-            'variant' => 'default',
-        );
-        
-        /*if ($_MIDCOM->context->page['id'] == $_MIDCOM->context->host->root)
-        {
-            // We're at MidCOM host root page, handle special URL cases
-        }*/
-
-        if (count($argv) == 0)
-        {
-            $info[$path]['object'] = $current_page;
-            $info[$path]['variant'] = 'collection';
-            return $info[$path];
-        }
-
-        if (count($argv) == 1)
-        {
-            // Only one argument, check it
-            switch ($argv[0])
-            {
-                case '__content.html':
-                    $info[$path]['object'] = $current_page;
-                    $info[$path]['variant'] = 'content_html';
-                    return $info[$path];
-                /*case '__midgard_page.xml':
-                    $info[$path]['object'] = $current_page;
-                    $info[$path]['variant'] = 'object_xml';
-                    return $info[$path];*/
-                default:
-                    $info[$path]['parent'] = $current_page;
-                    $qb = midgard_page::new_query_builder();
-                    $qb->add_constraint('up', '=', $current_page->id);
-                    $qb->add_constraint('name', '=', $argv[0]);
-                    $pages = $qb->execute();
-                    if (count($pages) > 0)
-                    {
-                        $info[$path]['object'] = $pages[0];
-                        $info[$path]['variant'] = 'collection';
-                        return $info[$path];
-                    }
-                    break;
-            }
-        }
-        
-        return $info[$path];
+        */
     }
 
     /**
-     * Logging method for WebDAV debugging
+     * Handle HTTP Basic authentication using MidCOM's authentication service
+     *
+     * @access private
+     * @param  string  HTTP Authentication type (Basic, Digest, ...)
+     * @param  string  Username
+     * @param  string  Password
+     * @return bool    true on successful authentication
      */
-    private function add_to_log($string, $addtime = true) 
+    function checkAuth($type, $username, $password)
     {
-        $log_file = fopen('/tmp/midcom-webdav.log', 'a');
-        if (!$log_file) 
+        if (!$_MIDCOM->authentication->is_user())
         {
-            return;
+            if (!$_MIDCOM->authentication->login($username, $password))
+            {
+                return false;
+            }
         }
-        
-        if ($addtime)
-        {
-            $string = date('r') . ": {$string}";
-        }
-        
-        fwrite($log_file, "{$string}\n");
-        fclose($log_file);
+        return true;
     }
 }
 ?>

@@ -46,6 +46,8 @@ routes:
         allowed_methods:
             - PROPFIND
             - OPTIONS
+        webdav_only: true
+        root_only: true
     snippets:
         controller: midcom_core_controllers_snippets
         action: webdav
@@ -55,6 +57,40 @@ routes:
             - PROPFIND
             - OPTIONS
             - GET
+            - PUT
+            - MOVE
+            - COPY
+            - DELETE
+            - LOCK
+            - UNLOCK
+        webdav_only: true
+        root_only: true
+    styles_root:
+        controller: midcom_core_controllers_styles
+        action: webdav
+        route: /__styles
+        allowed_methods:
+            - PROPFIND
+            - OPTIONS
+        webdav_only: true
+        root_only: true
+    styles:
+        controller: midcom_core_controllers_styles
+        action: webdav
+        route: /__styles@
+        allowed_methods:
+            - MKCOL
+            - PROPFIND
+            - OPTIONS
+            - GET
+            - PUT
+            - MOVE
+            - COPY
+            - DELETE
+            - LOCK
+            - UNLOCK
+        webdav_only: true
+        root_only: true
     page_edit:
         controller: midcom_core_controllers_page
         action: edit

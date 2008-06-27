@@ -237,17 +237,16 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         $action_method = "action_{$selected_route_configuration['action']}";
         
         // Handle HTTP request
-        switch ($this->request_method)
+        if (   isset($selected_route_configuration['webdav_only'])
+            && $selected_route_configuration['webdav_only']
+            || (   $this->request_method != 'GET'
+                && $this->request_method != 'POST')
+            )
         {
-            case 'GET':
-            case 'POST':
-                // Short-cut these types directly to the controller
-                break;
-            default:
-                // For others, start the full WebDAV server instance
-                $webdav_server = new midcom_core_helpers_webdav($controller);
-                $webdav_server->serve($this->route_id, $action_method, $this->action_arguments);
-                // This will exit
+            // Start the full WebDAV server instance
+            $webdav_server = new midcom_core_helpers_webdav($controller);
+            $webdav_server->serve($this->route_id, $action_method, $this->action_arguments);
+            // This will exit
         }
 
         // TODO: store this array somewhere where it can be accessed via get_context_item
