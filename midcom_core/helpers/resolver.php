@@ -250,6 +250,8 @@ class midcom_core_helpers_resolver
         $selected_route_configuration = $route_definitions[$this->route_id];
         
         return array('route' => $selected_route_configuration,
+                     'route_id' => $this->route_id,
+                     'actions_arguments' => array(),
                      'page' => new midgard_page($this->page_id));
 
         // Handle allowed HTTP methods
