@@ -316,18 +316,18 @@ class midcom_core_controllers_snippets
                 return;
 
             case 'GET':
-                if ($this->get_snippet($this->object_path))
-                {
-                    $data['data'] = $this->snippet->code;
-                    $data['mimetype'] = 'text/plain';
-                    $data['mtime'] = strtotime($this->snippet->metadata->revised);
-                    return;
-                }
-                elseif ($this->get_snippetdir($this->object_path))
+                if ($this->get_snippetdir($this->object_path))
                 {
                     $data['mimetype'] = 'httpd/unix-directory'; 
                     $data['size'] = 0;
                     $data['mtime'] = strtotime($this->snippetdir->metadata->revised);
+                    return;
+                }
+                elseif ($this->get_snippet($this->object_path))
+                {
+                    $data['data'] = $this->snippet->code;
+                    $data['mimetype'] = 'text/plain';
+                    $data['mtime'] = strtotime($this->snippet->metadata->revised);
                     return;
                 }
 
