@@ -416,11 +416,24 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
             $this->route_id = $route_id;
             $_MIDCOM->context->route_id = $this->route_id;
             // Map variable arguments
+            
             foreach ($route_path_matches[1] as $index => $varname)
             {
+                preg_match('/{$([a-zA-Z]+):([a-zA-Z]+)}/', $varname, $matches);
+                $type_hint = $matches[0];
+                
                 // Strip type hints from variable names
                 $varname = preg_replace('/^.+:/', '', $varname);
-                $this->action_arguments[$varname] =$route_path_regex_matches[$index+1];
+                
+                if ($type_hint == 'token')
+                {
+                    // Tokenize the argument to handle resource typing
+                    $this->action_arguments[$varname] = $this->tokenize_argument($this->get[$get_key]);
+                }
+                else
+                {
+                    $this->action_arguments[$varname] = $route_path_regex_matches[$index + 1];
+                }
             }
             return true;
         }
@@ -469,9 +482,22 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                 $this->action_arguments = array();
                 return false;
             }
+            
+            preg_match('/{$([a-zA-Z]+):([a-zA-Z]+)}/', $route_get_matches[2][$index], $matches);
+            $type_hint = $matches[0];
+                
             // Strip type hints from variable names
             $varname = preg_replace('/^.+:/', '', $route_get_matches[2][$index]);
-            $this->action_arguments[$varname] = $this->get[$get_key];
+                            
+            if ($type_hint == 'token')
+            {
+                 // Tokenize the argument to handle resource typing
+                $this->action_arguments[$varname] = $this->tokenize_argument($this->get[$get_key]);
+            }
+            else
+            {
+                $this->action_arguments[$varname] = $this->get[$get_key];
+            }
         }
 
         // Unlike in route_matches falling through means match
