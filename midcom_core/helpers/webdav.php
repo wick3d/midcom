@@ -103,6 +103,8 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      */
     function PROPFIND(&$options, &$files) 
     {
+        $this->filename_check();
+        
         $_MIDCOM->authorization->require_user();
 
         // Run the controller
@@ -156,8 +158,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
             $files['files'][] = $child_props;
         }
     }
-    
-    
+
     private function get_node_children(midgard_page $node)
     {
         // Load children for PROPFIND purposes
@@ -205,6 +206,25 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
     }
 
     /**
+     * Check filename against some stupidity
+     */
+    private function filename_check()
+    {
+        if (!isset($this->action_arguments['variable_arguments']))
+        {
+            return;
+        }
+        
+        $filename = $this->action_arguments['variable_arguments'][count($this->action_arguments['variable_arguments']) - 1];
+        if (   $filename == '.DS_Store'
+            || substr($filename, 0, 2) == '._')
+        {
+            $this->logger->log("Raising 404 for {$filename} because of filename sanity rules");
+            throw new midcom_exception_notfound("OS X DotFiles not allowed");
+        }
+    }
+
+    /**
      * GET method handler
      * 
      * @param  array  parameter passing array
@@ -212,6 +232,8 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      */
     function GET(&$options) 
     {
+        $this->filename_check();
+
         $_MIDCOM->authorization->require_user();
 
         // Run the controller
@@ -231,6 +253,8 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      */
     function PUT(&$options) 
     {
+        $this->filename_check();
+
         $_MIDCOM->authorization->require_user();
 
         // Run the controller
