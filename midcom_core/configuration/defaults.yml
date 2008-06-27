@@ -39,6 +39,13 @@ routes:
             - OPTIONS
             - GET
             - PROPFIND
+    snippets_root:
+        controller: midcom_core_controllers_snippets
+        action: webdav
+        route: /__snippets
+        allowed_methods:
+            - PROPFIND
+            - OPTIONS
     snippets:
         controller: midcom_core_controllers_snippets
         action: webdav

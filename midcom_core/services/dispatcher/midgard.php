@@ -161,7 +161,6 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         
         $this->component_name = $component;
         $_MIDCOM->context->component_instance = $_MIDCOM->componentloader->load($this->component_name, $page);
-        
         $_MIDCOM->templating->append_directory($_MIDCOM->componentloader->component_to_filepath($this->component_name) . '/templates');
     }
     

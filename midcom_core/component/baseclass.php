@@ -30,32 +30,5 @@ abstract class midcom_core_component_baseclass implements midcom_core_component_
     public function on_initialize()
     {
     }
-    
-    public function get_node_children(midgard_page $node)
-    {
-        // Load children for PROPFIND purposes
-        $children = array();
-        $mc = midgard_page::new_collector('up', $_MIDCOM->context->page['id']);
-        $mc->set_key_property('name');
-        $mc->add_value_property('title');
-        $mc->execute(); 
-        $pages = $mc->list_keys();
-        foreach ($pages as $name => $array)
-        {
-            if (empty($name))
-            {
-                continue;
-            }
-            $children[] = array
-            (
-                'uri'      => "{$_MIDCOM->context->prefix}{$name}/", // FIXME: dispatcher::generate_url
-                'title'    => $mc->get_subkey($name, 'title'),
-                'mimetype' => 'httpd/unix-directory',
-                'resource' => 'collection',
-            );
-        }
-        
-        return $children;
-    }
 }
 ?>
