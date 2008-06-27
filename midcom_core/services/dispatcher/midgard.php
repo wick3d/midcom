@@ -366,7 +366,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
             // Reset variables
             $this->action_arguments = array();
             list ($route_path, $route_get, $route_args) = $_MIDCOM->configuration->split_route($route);
-
+            
             if (!preg_match_all('%\{\$(.+?)\}%', $route_path, $route_path_matches))
             {
                 // Simple route (only static arguments)
@@ -395,8 +395,15 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                 continue;
             }
             // "complex" route (with variable arguments)
-            $route_path_regex = '%^' . str_replace('%', '\%', preg_replace('%\{(.+?)\}%', '([^/]+?)', $route_path)) . '$%';
-            //echo "DEBUG: route_path_regex:{$route_path_regex} argv_str:{$argv_str}\n";
+            if(preg_match('%@%', $route, $match))
+            {   
+                $route_path_regex = '%^' . str_replace('%', '\%', preg_replace('%\{(.+?)\}\@%', '([^/]+?)', $route_path)) . '(.*)%';
+            }
+            else 
+            {
+                $route_path_regex = '%^' . str_replace('%', '\%', preg_replace('%\{(.+?)\}%', '([^/]+?)', $route_path)) . '$%';
+            }
+//            echo "DEBUG: route_path_regex:{$route_path_regex} argv_str:{$argv_str}\n";
             if (!preg_match($route_path_regex, $argv_str, $route_path_regex_matches))
             {
                 // Does not match, NEXT!
@@ -426,10 +433,10 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                 {
                     $type_hint = $matches[1];
                 }
-                
+                                
                 // Strip type hints from variable names
                 $varname = preg_replace('/^.+:/', '', $varname);
-                
+
                 if ($type_hint == 'token')
                 {
                     // Tokenize the argument to handle resource typing
@@ -439,6 +446,19 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                 {
                     $this->action_arguments[$varname] = $route_path_regex_matches[$index + 1];
                 }
+                
+                if (preg_match('%@%', $route, $match)) // Route @ set
+                {
+                    $path = explode('@', $route_path);
+                    if (preg_match('%' . str_replace('/', '\/', preg_replace('%\{(.+?)\}%', '([^/]+?)', $path[0])) . '/(.*)\/%', $argv_str, $matches))
+                    {
+                        $this->route_id = $route_id;
+                        $this->action_arguments = explode('/', $matches[1]);
+                        $_MIDCOM->context->route_id = $this->route_id;
+                        return true;
+                    }
+                }
+                
             }
             return true;
         }
