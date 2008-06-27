@@ -63,12 +63,10 @@ class midcom_core_helpers_resolver
     
     private function resolve_page($path)
     {
-        $temp = $path;
+        $temp = trim($path);
         $parent_id = $_MIDCOM->context->host->root;
-
-        $path = explode('/', $path);
-
-        
+        $this->page_id = $parent_id;
+        $path = explode('/', trim($path));
         foreach($path as $p)
         {
             if(strlen(trim($p)) == 0)
@@ -79,16 +77,15 @@ class midcom_core_helpers_resolver
             $qb->add_constraint('up', '=', $parent_id);
             $qb->add_constraint('name', '=', $p);
             $res = $qb->execute();
-            if (count($res) != 1)
+            if(count($res) != 1)
             {
-                break;
+                break;            
             }
             $parent_id = $res[0]->id;
-            $temp = substr($temp, 1 + strlen($p));
+            $temp = substr($temp, 1+strlen($p));
             $this->page_id = $parent_id;
         }
-        
-        if (strlen($temp)<2)
+        if(strlen($temp)<2)
         {
             $this->path = '/';
         }
@@ -252,7 +249,9 @@ class midcom_core_helpers_resolver
 
         $selected_route_configuration = $route_definitions[$this->route_id];
         
-        return array('controller' => $selected_route_configuration,
+        return array('route' => $selected_route_configuration,
+                     'route_id' => $this->route_id,
+                     'actions_arguments' => array(),
                      'page' => new midgard_page($this->page_id));
 
         // Handle allowed HTTP methods
