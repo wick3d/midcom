@@ -92,7 +92,18 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
         $conf['props'][] = $this->mkprop('getlastmodified', strtotime($page->metadata->revised));
         $conf['path'] = "{$_MIDCOM->context->prefix}__content.html";
         $files['files'][] = $conf;
-    
+        
+        /*
+        $conf = $this->get_files_stub();
+        $conf['props'][] = $this->mkprop('displayname', $page->title);
+        $conf['props'][] = $this->mkprop('resourcetype', '');
+        $conf['props'][] = $this->mkprop('getcontenttype', 'text/xml');
+        //$conf['props'][] = $this->mkprop('getcontentlength', strlen($page->serialize()));
+        $conf['props'][] = $this->mkprop('getlastmodified', strtotime($page->metadata->revised));
+        $conf['path'] = "{$_MIDCOM->context->prefix}__midgard_page.xml";
+        $files['files'][] = $conf;
+        */
+            
         $mc = midgard_page::new_collector('up', $page->id);
         $mc->set_key_property('name');
         $mc->add_value_property('title');
@@ -171,6 +182,10 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
                 $options['mimetype'] = 'text/html';
                 $options['mtime'] = $info['object']->metadata->revised;
                 return true;
+            /*case 'object_xml':
+                $options['data'] = $info['object']->serialize();
+                $options['mimetype'] = 'text/xml';
+                $options['mtime'] = $info['object']->metadata->revised;*/
             default:
                 throw new midcom_exception_notfound("Not found");
         }
@@ -451,25 +466,29 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
         if (count($argv) == 1)
         {
             // Only one argument, check it
-            if ($argv[0] == '__content.html')
+            switch ($argv[0])
             {
-                $info[$path]['object'] = $current_page;
-                $info[$path]['variant'] = 'content_html';
-                return $info[$path];
-            }
-            else
-            {
-                $info[$path]['parent'] = $current_page;
-                $qb = midgard_page::new_query_builder();
-                $qb->add_constraint('up', '=', $current_page->id);
-                $qb->add_constraint('name', '=', $argv[0]);
-                $pages = $qb->execute();
-                if (count($pages) > 0)
-                {
-                    $info[$path]['object'] = $pages[0];
-                    $info[$path]['variant'] = 'collection';
+                case '__content.html':
+                    $info[$path]['object'] = $current_page;
+                    $info[$path]['variant'] = 'content_html';
                     return $info[$path];
-                }
+                /*case '__midgard_page.xml':
+                    $info[$path]['object'] = $current_page;
+                    $info[$path]['variant'] = 'object_xml';
+                    return $info[$path];*/
+                default:
+                    $info[$path]['parent'] = $current_page;
+                    $qb = midgard_page::new_query_builder();
+                    $qb->add_constraint('up', '=', $current_page->id);
+                    $qb->add_constraint('name', '=', $argv[0]);
+                    $pages = $qb->execute();
+                    if (count($pages) > 0)
+                    {
+                        $info[$path]['object'] = $pages[0];
+                        $info[$path]['variant'] = 'collection';
+                        return $info[$path];
+                    }
+                    break;
             }
         }
         

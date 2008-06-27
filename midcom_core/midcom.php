@@ -186,6 +186,7 @@ class midcom_core_midcom
                     // Handle WebDAV methods
                     $webdav_server = new midcom_core_helpers_webdav();
                     $webdav_server->serve();
+                    // This will exit
                 }
                 break;
         }
@@ -231,6 +232,7 @@ class midcom_core_midcom
             {
                 $webdav_server = new midcom_core_helpers_webdav();
                 $webdav_server->serve();
+                // This will exit
             }
             throw $exception;
         }
