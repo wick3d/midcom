@@ -166,7 +166,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
      */
     public function get_routes()
     {
-        $this->core_routes = $_MIDCOM->configuration->get('routes');
+        $this->core_routes = $_MIDCOM->configuration->normalize_routes($_MIDCOM->configuration->get('routes'));
         
         if (   !isset($_MIDCOM->context->component_instance)
             || !$_MIDCOM->context->component_instance)
@@ -174,10 +174,11 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
             return $this->core_routes;
         }
         
-        $this->component_routes = $_MIDCOM->context->component_instance->configuration->get('routes');
+        $this->component_routes = $_MIDCOM->configuration->normalize_routes($_MIDCOM->context->component_instance->configuration->get('routes'));
         
         return array_merge($this->core_routes, $this->component_routes);
     }
+
 
     /**
      * Load a component and dispatch the request to it
@@ -217,13 +218,35 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
 
         $selected_route_configuration = $route_definitions[$this->route_id];
 
+        // Handle allowed HTTP methods
+        header('Allow: ' . implode(', ', $selected_route_configuration['allowed_methods']));
+        if (!in_array($_SERVER['REQUEST_METHOD'], $selected_route_configuration['allowed_methods']))
+        {
+            throw new midcom_exception_httperror("{$_SERVER['REQUEST_METHOD']} not allowed", 405);
+        }
+        
         // Initialize controller
         $controller_class = $selected_route_configuration['controller'];
         $controller = new $controller_class($_MIDCOM->context->component_instance);
         $controller->dispatcher = $this;
         
-        // Then call the route_id
+        // Define the action method for the route_id
         $action_method = "action_{$selected_route_configuration['action']}";
+        
+        // Handle HTTP request
+        switch ($_SERVER['REQUEST_METHOD'])
+        {
+            case 'GET':
+            case 'POST':
+                // Short-cut these types directly to the controller
+                break;
+            default:
+                // For others, start the full WebDAV server instance
+                $webdav_server = new midcom_core_helpers_webdav($controller);
+                $webdav_server->serve($this->route_id, $action_method, $this->action_arguments);
+                // This will exit
+        }
+
         // TODO: store this array somewhere where it can be accessed via get_context_item
         $data = array();
         if ($_MIDCOM->timer)
@@ -312,44 +335,6 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         return preg_replace('%/{2,}%', '/', $_MIDCOM->context->prefix . $link);
     }
 
-    /**
-     * Normalizes given route definition ready for parsing
-     *
-     * @param string $route route definition
-     * @return string normalized route
-     */
-    public function normalize_route($route)
-    {
-        // Normalize route
-        if (   strpos($route, '?') === false
-            && substr($route, -1, 1) !== '/')
-        {
-            $route .= '/';
-        }
-        return preg_replace('%/{2,}%', '/', $route);
-    }
-
-    /**
-     * Splits a given route (after normalizing it) to it's path and get parts
-     *
-     * @param string $route reference to a route definition
-     * @return array first item is path part, second is get part, both default to boolean false
-     */
-    public function split_route(&$route)
-    {
-        $route_path = false;
-        $route_get = false;
-        $route = $this->normalize_route($route);
-        // Get route parts
-        $route_parts = explode('?', $route, 2);
-        $route_path = $route_parts[0];
-        if (isset($route_parts[1]))
-        {
-            $route_get = $route_parts[1];
-        }
-        unset($route_parts);
-        return array($route_path, $route_get);
-    }
 
     /**
      * Tries to match one route from an array of route definitions
@@ -377,7 +362,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         {
             // Reset variables
             $this->action_arguments = array();
-            list ($route_path, $route_get) = $this->split_route($route);
+            list ($route_path, $route_get, $route_args) = $_MIDCOM->configuration->split_route($route);
 
             //echo "DEBUG: route_id: {$route_id} route:{$route} argv_str:{$argv_str}\n";
 
@@ -419,8 +404,16 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
             
             foreach ($route_path_matches[1] as $index => $varname)
             {
-                preg_match('/{$([a-zA-Z]+):([a-zA-Z]+)}/', $varname, $matches);
-                $type_hint = $matches[0];
+                preg_match('%/{\$([a-zA-Z]+):([a-zA-Z]+)}/%', $varname, $matches);
+                
+                if(count($matches) == 0)
+                {
+                    $type_hint = '';
+                }
+                else
+                {
+                    $type_hint = $matches[1];
+                }
                 
                 // Strip type hints from variable names
                 $varname = preg_replace('/^.+:/', '', $varname);
@@ -483,8 +476,16 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                 return false;
             }
             
-            preg_match('/{$([a-zA-Z]+):([a-zA-Z]+)}/', $route_get_matches[2][$index], $matches);
-            $type_hint = $matches[0];
+            preg_match('%/{\$([a-zA-Z]+):([a-zA-Z]+)}/%', $route_get_matches[2][$index], $matches);
+            
+            if(count($matches) == 0)
+            {
+                $type_hint = '';
+            }
+            else
+            {
+                $type_hint = $matches[1];
+            }
                 
             // Strip type hints from variable names
             $varname = preg_replace('/^.+:/', '', $route_get_matches[2][$index]);

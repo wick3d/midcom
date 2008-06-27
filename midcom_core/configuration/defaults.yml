@@ -35,6 +35,10 @@ routes:
         controller: midcom_core_controllers_page
         action: show
         route: /
+        allowed_methods:
+            - OPTIONS
+            - GET
+            - PROPFIND
     page_edit:
         controller: midcom_core_controllers_page
         action: edit
@@ -63,7 +67,7 @@ routes:
     midcom_about:
         controller: midcom_core_controllers_about
         action: about
-        route: /__midcom
+        route: /__midcom/@
         root_only: true
         content_entry_point: midcom-show-about
     comet_messages:

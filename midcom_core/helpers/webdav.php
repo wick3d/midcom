@@ -20,10 +20,15 @@ $_SERVER['PATH_INFO'] = $_MIDCOM->context->uri;
 class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
 {
     private $logger = null;
+    private $controller = null;
+    private $route_id = '';
+    private $action_method = '';
+    private $action_arguments = array();
     
-    public function __construct()
+    public function __construct($controller)
     {
         $this->logger = new midcom_core_helpers_log('webdav');
+        $this->controller = $controller;
         parent::HTTP_WebDAV_Server();
     }
 
@@ -31,10 +36,13 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      * Serve a WebDAV request
      *
      * @access public
-     * @param  string  
      */
-    public function serve($base = false) 
+    public function serve($route_id, $action_method, $action_arguments) 
     {
+        $this->route_id = $route_id;
+        $this->action_method = $action_method;
+        $this->action_arguments = $action_arguments;
+    
         // special treatment for litmus compliance test
         // reply on its identifier header
         // not needed for the test itself but eases debugging
@@ -49,6 +57,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
 
         $this->logger->log("\n\n=================================================", false);
         $this->logger->log("Serving {$_SERVER['REQUEST_METHOD']} request for {$_SERVER['REQUEST_URI']}");
+        $this->logger->log("Controller: " . get_class($this->controller) . ", action: {$this->action_method}");
         
         header("X-Dav-Method: {$_SERVER['REQUEST_METHOD']}");
         

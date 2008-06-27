@@ -173,32 +173,6 @@ class midcom_core_midcom
         $_MIDCOM->templating->append_directory(MIDCOM_ROOT . '/midcom_core/templates');
         $this->dispatcher->populate_environment_data();
 
-        switch ($_SERVER['REQUEST_METHOD'])
-        {
-            case 'GET':
-            case 'POST':
-                // GET and POST are handled by regular dispatcher
-                $this->process_dispatcher();
-                break;
-            default:
-                if ($this->configuration->get('enable_webdav'))
-                {
-                    // Handle WebDAV methods
-                    $webdav_server = new midcom_core_helpers_webdav();
-                    $webdav_server->serve();
-                    // This will exit
-                }
-                break;
-        }
-        
-        if ($this->timer)
-        {
-            $this->timer->setMarker('MidCOM::process ended');
-        }
-    }
-        
-    private function process_dispatcher()
-    {
         // Load component
         try
         {
@@ -212,12 +186,6 @@ class midcom_core_midcom
         if (!$component)
         {
             $component = 'midcom_core';
-            //if (!empty($this->dispatcher->argv))
-            //{
-                // FIXME: Process these also in the dispatcher as we will have some "core" routes
-            //    throw new midcom_exception_notfound("Page not found.");
-            //}
-            //return;
         }
         
         $this->dispatcher->initialize($component);
@@ -226,16 +194,6 @@ class midcom_core_midcom
         {
             $this->dispatcher->dispatch();
         }
-        catch (midcom_exception_notfound $exception)
-        {
-            if ($this->configuration->get('enable_webdav'))
-            {
-                $webdav_server = new midcom_core_helpers_webdav();
-                $webdav_server->serve();
-                // This will exit
-            }
-            throw $exception;
-        }
         catch (midcom_exception_unauthorized $exception)
         {
             // Pass the exception to authentication handler
@@ -243,6 +201,11 @@ class midcom_core_midcom
         }
 
         header('Content-Type: ' . $this->context->mimetype);
-    }
+
+        if ($this->timer)
+        {
+            $this->timer->setMarker('MidCOM::process ended');
+        }
+    }        
 }
 ?>
