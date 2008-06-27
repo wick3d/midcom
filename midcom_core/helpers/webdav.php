@@ -112,19 +112,15 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
         if (!isset($data['children']))
         {
             // Controller did not return children
-            $data['children'] = array();
+            $page = new midgard_page($_MIDCOM->context->page['guid']);
+            $data['children'] = $this->get_node_children($page);
         }
         
-        // Get children from component instance
-        $page = new midgard_page($_MIDCOM->context->page['guid']);
-        $data['children'] = array_merge
-        (
-            $data['children'],
-            $_MIDCOM->context->component_instance->get_node_children($page)
-        );
-        
-        // Convert children to PROPFIND elements
-        $this->children_to_files($data['children'], &$files);
+        if (!empty($data['children']))
+        {
+            // Convert children to PROPFIND elements
+            $this->children_to_files($data['children'], &$files);
+        }
         
         return true;
     }
@@ -139,10 +135,62 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
                 'path'  => $child['uri'],
             );
             $child_props['props'][] = $this->mkprop('displayname', $child['title']);
-            $child_props['props'][] = $this->mkprop('resourcetype', $child['resource']);
             $child_props['props'][] = $this->mkprop('getcontenttype', $child['mimetype']);
+            
+            if (isset($child['resource']))
+            {
+                $child_props['props'][] = $this->mkprop('resourcetype', $child['resource']);
+            }
+
+            if (isset($child['size']))
+            {
+                $child_props['props'][] = $this->mkprop('getcontentlength', $child['size']);
+            }
+
+            if (isset($child['revised']))
+            {
+                $child_props['props'][] = $this->mkprop('getlastmodified', strtotime($child['revised']));
+            }
+
             $files['files'][] = $child_props;
         }
+    }
+    
+    
+    private function get_node_children(midgard_page $node)
+    {
+        // Load children for PROPFIND purposes
+        $children = array();
+        $mc = midgard_page::new_collector('up', $_MIDCOM->context->page['id']);
+        $mc->set_key_property('name');
+        $mc->add_value_property('title');
+        $mc->execute(); 
+        $pages = $mc->list_keys();
+        foreach ($pages as $name => $array)
+        {
+            if (empty($name))
+            {
+                continue;
+            }
+            $children[] = array
+            (
+                'uri'      => "{$_MIDCOM->context->prefix}{$name}/", // FIXME: dispatcher::generate_url
+                'title'    => $mc->get_subkey($name, 'title'),
+                'mimetype' => 'httpd/unix-directory',
+                'resource' => 'collection',
+            );
+        }
+        
+        // Additional "special" URLs
+        $children[] = array
+        (
+            'uri'      => "{$_MIDCOM->context->prefix}__snippets/", // FIXME: dispatcher::generate_url
+            'title'    => 'Code Snippets',
+            'mimetype' => 'httpd/unix-directory',
+            'resource' => 'collection',
+        );
+        
+        return $children;
     }
 
     /**

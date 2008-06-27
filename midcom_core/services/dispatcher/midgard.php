@@ -161,7 +161,6 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         
         $this->component_name = $component;
         $_MIDCOM->context->component_instance = $_MIDCOM->componentloader->load($this->component_name, $page);
-        
         $_MIDCOM->templating->append_directory($_MIDCOM->componentloader->component_to_filepath($this->component_name) . '/templates');
     }
     
@@ -388,7 +387,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                     if (preg_match('%' . str_replace('/', '\/', $path[0]) . '/(.*)\/%', $argv_str, $matches))
                     {
                         $this->route_id = $route_id;
-                        $this->action_arguments = explode('/', $matches[1]);
+                        $this->action_arguments['variable_arguments'] = explode('/', $matches[1]);
                         $_MIDCOM->context->route_id = $this->route_id;
                         return true;
                     }
