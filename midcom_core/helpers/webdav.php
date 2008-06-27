@@ -64,8 +64,32 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
         // let the base class do all the work
         parent::ServeRequest();
         $this->logger->log("Path was: {$this->path}");
-        flush();
         die();
+    }
+
+    /**
+     * OPTIONS method handler
+     *
+     * The OPTIONS method handler creates a valid OPTIONS reply
+     * including Dav: and Allowed: heaers
+     * based on the route configuration
+     *
+     * @param  void
+     * @return void
+     */
+    function http_OPTIONS() 
+    {
+        // Microsoft clients default to the Frontpage protocol 
+        // unless we tell them to use WebDAV
+        header("MS-Author-Via: DAV");
+
+        // tell clients what we found
+        $this->http_status("200 OK");
+        
+        // We support DAV levels 1 & 2
+        header("DAV: 1, 2");
+        
+        header("Content-length: 0");
     }
 
     /**

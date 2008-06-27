@@ -382,15 +382,14 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                     $_MIDCOM->context->route_id = $this->route_id;
                     return true;
                 }
-                if( $route_args) // Route @ set
+                if ($route_args) // Route @ set
                 {
-                    $path = explode('@',$route_path);
-                    if( preg_match("%{$path[0]}/(.*)%", $argv_str, $matches))
+                    $path = explode('@', $route_path);
+                    if (preg_match('%' . str_replace('/', '\/', $path[0]) . '/(.*)\/%', $argv_str, $matches))
                     {
                         $this->route_id = $route_id;
-                        $this->route_arguments = explode('/', $matches[1]);
+                        $this->action_arguments = explode('/', $matches[1]);
                         $_MIDCOM->context->route_id = $this->route_id;
-                        $_MIDCOM->context->route_arguments = $this->route_arguments;
                         return true;
                     }
                 }
