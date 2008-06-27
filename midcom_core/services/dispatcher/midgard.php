@@ -388,7 +388,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                     if (preg_match('%' . str_replace('/', '\/', $path[0]) . '/(.*)\/%', $argv_str, $matches))
                     {
                         $this->route_id = $route_id;
-                        $this->action_arguments = explode('/', $matches[1]);
+                        $this->action_arguments['variable_arguments'] = explode('/', $matches[1]);
                         $_MIDCOM->context->route_id = $this->route_id;
                         return true;
                     }
