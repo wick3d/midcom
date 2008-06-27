@@ -192,8 +192,15 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
                 'mimetype' => 'httpd/unix-directory',
                 'resource' => 'collection',
             );
+            $children[] = array
+            (
+                'uri'      => "{$_MIDCOM->context->prefix}__styles/", // FIXME: dispatcher::generate_url
+                'title'    => 'Style Templates',
+                'mimetype' => 'httpd/unix-directory',
+                'resource' => 'collection',
+            );
         }
-        
+
         return $children;
     }
 
