@@ -117,7 +117,11 @@ class midcom_core_controllers_snippets
         
         if (!$this->get_snippetdir($this->object_path))
         {
-            throw new midcom_exception_notfound("Snippetdir {$this->object_path} not found");
+            if (!$this->get_snippet($this->object_path))
+            {
+                throw new midcom_exception_notfound("Snippetdir {$this->object_path} not found");
+            }
+            return;
         }
         
         $data['children'] = $this->get_snippetdir_children($this->snippetdir->id);
@@ -301,6 +305,24 @@ class midcom_core_controllers_snippets
             case 'COPY':
                 $this->handle_copy($route_id, &$data);
                 return;
+
+            case 'DELETE':
+                if ($this->get_snippet($this->object_path))
+                {
+                    $this->snippet->delete();
+                    return;
+                }
+                elseif ($this->get_snippetdir($this->object_path))
+                {
+                    $this->snippetdir->delete();
+                    return;
+                }
+
+                throw new midcom_exception_notfound("Snippetdir {$this->object_path} not found");
+                return;
+
+            default:
+                throw new midcom_exception_httperror("{$this->dispatcher->request_method} not allowed", 405);
         }
 
     }

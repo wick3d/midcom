@@ -58,6 +58,9 @@ routes:
             - PUT
             - MOVE
             - COPY
+            - DELETE
+            - LOCK
+            - UNLOCK
         webdav_only: true
     page_edit:
         controller: midcom_core_controllers_page

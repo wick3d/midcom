@@ -89,7 +89,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
         
         // We support DAV levels 1 & 2
         // header("DAV: 1, 2"); TODO: Re-enable when we support locks
-        header("DAV: 1");
+        header("DAV: 1, 2");
         
         header("Content-length: 0");
     }
@@ -182,14 +182,17 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
             );
         }
         
-        // Additional "special" URLs
-        $children[] = array
-        (
-            'uri'      => "{$_MIDCOM->context->prefix}__snippets/", // FIXME: dispatcher::generate_url
-            'title'    => 'Code Snippets',
-            'mimetype' => 'httpd/unix-directory',
-            'resource' => 'collection',
-        );
+        if ($_MIDCOM->context->page['id'] == $_MIDCOM->context->host->root)
+        {
+            // Additional "special" URLs
+            $children[] = array
+            (
+                'uri'      => "{$_MIDCOM->context->prefix}__snippets/", // FIXME: dispatcher::generate_url
+                'title'    => 'Code Snippets',
+                'mimetype' => 'httpd/unix-directory',
+                'resource' => 'collection',
+            );
+        }
         
         return $children;
     }
@@ -284,15 +287,34 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
     }
 
     /**
+     * DELETE method handler
+     *
+     * @param  array  general parameter passing array
+     * @return bool   true on success
+     */
+    function DELETE($options) 
+    {
+        // Run the controller
+        $controller = $this->controller;
+        $action_method = $this->action_method;
+        $data =& $options;
+        $controller->$action_method($this->route_id, $data, $this->action_arguments);
+
+        return "204 No Content";
+    }
+
+
+    /**
      * LOCK method handler
      *
      * @param  array  general parameter passing array
      * @return bool   true on success
+     */
     function LOCK(&$options) 
     {
-        $this->logger->log("Options: " . serialize($options));
-        $info = $this->get_path_info();
-
+        $options['timeout'] = time() + $_MIDCOM->configuration->get('metadata_lock_timeout');
+        return "200 OK";
+        /*
         $shared = false;
         if ($options['scope'] == 'shared')
         {
@@ -314,6 +336,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
         $options['timeout'] = time() + $_MIDCOM->configuration->get('metadata_lock_timeout');
         
         return "200 OK";
+        */
     }
     
     /**
@@ -321,24 +344,9 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      *
      * @param  array  general parameter passing array
      * @return bool   true on success
+     */
     function UNLOCK(&$options) 
     {
-        $info = $this->get_path_info();
-        
-        if (is_null($info['object']))
-        {
-            throw new midcom_exception_notfound("Not found");
-        }
-        
-        if (midcom_core_helpers_metadata::is_locked($info['object']))
-        {
-            $this->logger->log("Object is locked by another user {$info['object']->metadata->locker}");
-            return "423 Locked";
-        }
-
-        $this->logger->log("Unlocking");
-        midcom_core_helpers_metadata::unlock($info['object']);
-
         return "200 OK";
     }
 
@@ -347,16 +355,12 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      *
      * @param  string resource path to check for locks
      * @return bool   true on success
+     */
     function checkLock($path) 
     {
-        $this->logger->log("checkLock {$path}");
-        $info = $this->get_path_info($path);
-        if (is_null($info['object']))
-        {
-            $this->logger->log("{$path} Not Found");
-            return false;
-        }
-        
+        return false;
+
+        /*
         if (!midcom_core_helpers_metadata::is_locked($info['object'], false))
         {
             $this->logger->log("Not locked, locked = {$info['object']->metadata->locked}, locker = {$info['object']->metadata->locker}");
@@ -388,8 +392,8 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
         
         $this->logger->log(serialize($lock));
         return $lock;
+        */
     }
-     */
 
     /**
      * Handle HTTP Basic authentication using MidCOM's authentication service
@@ -400,7 +404,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      * @param  string  Password
      * @return bool    true on successful authentication
      */
-    function checkAuth($type, $user, $pass)
+    function checkAuth($type, $username, $password)
     {
         if (!$_MIDCOM->authentication->is_user())
         {
