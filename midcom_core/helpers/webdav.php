@@ -25,6 +25,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
     private $route_id = '';
     private $action_method = '';
     private $action_arguments = array();
+    private $locks = array();
     
     public function __construct($controller)
     {
@@ -208,14 +209,17 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
     /**
      * Check filename against some stupidity
      */
-    private function filename_check()
+    private function filename_check($filename = null)
     {
-        if (!isset($this->action_arguments['variable_arguments']))
+        if (is_null($filename))
         {
-            return;
+            if (!isset($this->action_arguments['variable_arguments']))
+            {
+                return;
+            }
+            
+            $filename = $this->action_arguments['variable_arguments'][count($this->action_arguments['variable_arguments']) - 1];
         }
-        
-        $filename = $this->action_arguments['variable_arguments'][count($this->action_arguments['variable_arguments']) - 1];
         if (   $filename == '.DS_Store'
             || substr($filename, 0, 2) == '._')
         {
@@ -389,13 +393,69 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      */
     function checkLock($path) 
     {
-        return false;
-
-        /*
-        if (!midcom_core_helpers_metadata::is_locked($info['object'], false))
+        if (isset($this->locks[$path]))
         {
-            $this->logger->log("Not locked, locked = {$info['object']->metadata->locked}, locker = {$info['object']->metadata->locker}");
-            return false;
+            return $this->locks[$path];
+        }
+        
+        try
+        {
+            $this->filename_check(basename($path));
+        }
+        catch (Exception $e)
+        {
+            // Don't bother checking these types of files for locks
+            $this->locks[$path] = false;
+            return $this->locks[$path];
+        }
+
+        $this->logger->log("Resolving {$path} for locks");
+        $resolv = new midcom_core_helpers_resolver($path);
+        try
+        {
+            $resolution = $resolv->resolve();
+        }
+        catch (midgard_error_exception $e)
+        {
+            $this->logger->log('Resolver got "' . $e->getMessage() . '"');
+        }
+
+        if (!in_array('PROPFIND', $resolution['controller']['allowed_methods']))
+        {
+            // No PROPFIND supported, so don't supply lock information either
+            $this->locks[$path] = false;
+            return $this->locks[$path];
+        }
+
+        $controller_class = $resolution['controller']['controller'];
+        $action_method = "get_object_{$resolution['controller']['action']}";
+
+        if (!method_exists($controller_class, $action_method))
+        {
+            $this->logger->log("{$controller_class} doesn't support {$action_method}");
+            $this->locks[$path] = false;
+            return $this->locks[$path];
+        }
+
+        $controller = new $controller_class($_MIDCOM->context->component_instance);
+        $controller->dispatcher = $_MIDCOM->dispatcher;
+
+        $data = array();
+        $object = $controller->$action_method($resolution['controller']['route_id'], $data, $resolution['controller']['route_id']);
+
+        if (!$object)
+        {
+            $this->logger->log("No object from {$controller_class} {$action_method}");
+            $this->locks[$path] = false;
+            return $this->locks[$path];
+        }
+        
+
+        if (!midcom_core_helpers_metadata::is_locked($object, false))
+        {
+            $this->logger->log("Not locked, locked = {$object->metadata->locked}, locker = {$object->metadata->locker}");
+            $this->locks[$path] = false;
+            return $this->locks[$path];
         }
 
         // Populate lock info from metadata
@@ -404,26 +464,27 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
             'type' => 'write',
             'scope' => 'shared',
             'depth' => 0,
-            'owner' => $info['object']->metadata->locker,
-            'created' => strtotime($info['object']->metadata->locked  . ' GMT'),
-            'modified' => strtotime($info['object']->metadata->locked . ' GMT'),
-            'expires' => strtotime($info['object']->metadata->locked . ' GMT') + $_MIDCOM->configuration->get('metadata_lock_timeout') * 60,
+            'owner' => $object->metadata->locker,
+            'created' => strtotime($object->metadata->locked  . ' GMT'),
+            'modified' => strtotime($object->metadata->locked . ' GMT'),
+            'expires' => strtotime($object->metadata->locked . ' GMT') + $_MIDCOM->configuration->get('metadata_lock_timeout') * 60,
         );
         
-        if ($info['object']->metadata->locker)
+        if ($object->metadata->locker)
         {
             $lock['scope'] = 'exclusive';
         }
         
-        $lock_token = $info['object']->parameter('midcom_core_helper_metadata', 'lock_token');
+        $lock_token = $object->parameter('midcom_core_helper_metadata', 'lock_token');
         if ($lock_token)
         {
             $lock['token'] = $lock_token;
         }
         
         $this->logger->log(serialize($lock));
-        return $lock;
-        */
+
+        $this->locks[$path] = $lock;
+        return $this->locks[$path];
     }
 
     /**

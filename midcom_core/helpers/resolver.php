@@ -65,7 +65,10 @@ class midcom_core_helpers_resolver
     {
         $temp = $path;
         $parent_id = $_MIDCOM->context->host->root;
+
         $path = explode('/', $path);
+
+        
         foreach($path as $p)
         {
             if(strlen(trim($p)) == 0)
@@ -76,15 +79,16 @@ class midcom_core_helpers_resolver
             $qb->add_constraint('up', '=', $parent_id);
             $qb->add_constraint('name', '=', $p);
             $res = $qb->execute();
-            if(count($res) != 1)
+            if (count($res) != 1)
             {
-                die("Unable to resolve.");
+                break;
             }
             $parent_id = $res[0]->id;
-            $temp = substr($temp, 1+strlen($p));
+            $temp = substr($temp, 1 + strlen($p));
             $this->page_id = $parent_id;
         }
-        if(strlen($temp)<2)
+        
+        if (strlen($temp)<2)
         {
             $this->path = '/';
         }
