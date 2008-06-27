@@ -19,6 +19,14 @@ $_SERVER['PATH_INFO'] = $_MIDCOM->context->uri;
  */
 class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
 {
+    private $logger = null;
+    
+    public function __construct()
+    {
+        $this->logger = new midcom_core_helpers_log('webdav');
+        parent::HTTP_WebDAV_Server();
+    }
+
     /**
      * Serve a WebDAV request
      *
@@ -39,14 +47,14 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
             }
         }
 
-        $this->add_to_log("\n\n=================================================", false);
-        $this->add_to_log("Serving {$_SERVER['REQUEST_METHOD']} request for {$_SERVER['REQUEST_URI']}");
+        $this->logger->log("\n\n=================================================", false);
+        $this->logger->log("Serving {$_SERVER['REQUEST_METHOD']} request for {$_SERVER['REQUEST_URI']}");
         
         header("X-Dav-Method: {$_SERVER['REQUEST_METHOD']}");
         
         // let the base class do all the work
         parent::ServeRequest();
-        $this->add_to_log("Path was: {$this->path}");
+        $this->logger->log("Path was: {$this->path}");
         flush();
         die();
     }
@@ -66,13 +74,13 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
         
         if (is_null($info['object']))
         {
-            $this->add_to_log("404 Not Found");
+            $this->logger->log("404 Not Found");
             throw new midcom_exception_notfound("Not found");
         }
 
         /*if (substr($_MIDCOM->dispatcher->argv[0], 0, 1) == '.')
         {
-            $this->add_to_log("Skipping dotfile, object is {$info['object']->guid}");
+            $this->logger->log("Skipping dotfile, object is {$info['object']->guid}");
             throw new midcom_exception_notfound("No dotfiles please");
         }*/
 
@@ -128,7 +136,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
     /*
     private function get_files_snippetdir($snippetdir_id, &$files)
     {
-        $this->add_to_log("Snippetdir {$snippetdir_id}");
+        $this->logger->log("Snippetdir {$snippetdir_id}");
         $mc = midgard_snippetdir::new_collector('up', $snippetdir_id);
         $mc->set_key_property('name');
         $mc->execute();
@@ -208,13 +216,13 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
             // Creation support
             if (is_null($info['parent']))
             {
-                $this->add_to_log("No parent known");
+                $this->logger->log("No parent known");
                 throw new midcom_exception_notfound("Not found");
             }
             
             $_MIDCOM->authorization->require_do('midgard:create', $info['parent']);
             
-            $this->add_to_log("Trying to create {$options['path']}.");
+            $this->logger->log("Trying to create {$options['path']}.");
             
             $file_type = pathinfo($options['path'], PATHINFO_EXTENSION);
             switch ($file_type)
@@ -261,13 +269,13 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
         // Creation support
         if (is_null($info['parent']))
         {
-            $this->add_to_log("No parent known");
+            $this->logger->log("No parent known");
             throw new midcom_exception_notfound("Not found");
         }
         
         $_MIDCOM->authorization->require_do('midgard:create', $info['parent']);
         
-        $this->add_to_log("Trying to create {$options['path']}");
+        $this->logger->log("Trying to create {$options['path']}");
         $page = new midgard_page();
         $page->up = $info['parent']->id;
         $page->name = basename($options['path']);
@@ -288,7 +296,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      */
     function LOCK(&$options) 
     {
-        $this->add_to_log("Options: " . serialize($options));
+        $this->logger->log("Options: " . serialize($options));
         $info = $this->get_path_info();
 
         $shared = false;
@@ -304,7 +312,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
         
         if (midcom_core_helpers_metadata::is_locked($info['object']))
         {
-            $this->add_to_log("Object is locked by another user");
+            $this->logger->log("Object is locked by another user");
             return "423 Locked";
         }
 
@@ -331,11 +339,11 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
         
         if (midcom_core_helpers_metadata::is_locked($info['object']))
         {
-            $this->add_to_log("Object is locked by another user {$info['object']->metadata->locker}");
+            $this->logger->log("Object is locked by another user {$info['object']->metadata->locker}");
             return "423 Locked";
         }
 
-        $this->add_to_log("Unlocking");
+        $this->logger->log("Unlocking");
         midcom_core_helpers_metadata::unlock($info['object']);
 
         return "200 OK";
@@ -370,17 +378,17 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      */
     function checkLock($path) 
     {
-        $this->add_to_log("checkLock {$path}");
+        $this->logger->log("checkLock {$path}");
         $info = $this->get_path_info($path);
         if (is_null($info['object']))
         {
-            $this->add_to_log("{$path} Not Found");
+            $this->logger->log("{$path} Not Found");
             return false;
         }
         
         if (!midcom_core_helpers_metadata::is_locked($info['object'], false))
         {
-            $this->add_to_log("Not locked, locked = {$info['object']->metadata->locked}, locker = {$info['object']->metadata->locker}");
+            $this->logger->log("Not locked, locked = {$info['object']->metadata->locked}, locker = {$info['object']->metadata->locker}");
             return false;
         }
 
@@ -407,7 +415,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
             $lock['token'] = $lock_token;
         }
         
-        $this->add_to_log(serialize($lock));
+        $this->logger->log(serialize($lock));
         return $lock;
     }
     
@@ -416,12 +424,12 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
         if (is_null($path))
         {
             $local_path = implode('/', $_MIDCOM->dispatcher->argv);
-            $this->add_to_log("Get path info \"{$local_path}\" from ARGV");
+            $this->logger->log("Get path info \"{$local_path}\" from ARGV");
         }
         else
         {
             $local_path = substr($path, strlen($_MIDCOM->context->prefix));
-            $this->add_to_log("Get path info \"{$local_path}\" from OPTIONS");
+            $this->logger->log("Get path info \"{$local_path}\" from OPTIONS");
         }
         $path = $local_path;
         

@@ -56,7 +56,7 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
         
         if (!is_writable($this->cache_directory))
         {
-            throw new Exception("Cache directory {$cache_directory} is not writable");
+            throw new Exception("Cache directory {$this->cache_directory} is not writable");
         }
     }
     
