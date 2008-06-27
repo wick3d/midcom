@@ -19,7 +19,16 @@ class midcom_core_helpers_log
     function __construct($log_name = 'midcom')
     {
         $this->log_file = str_replace('__MIDGARDLOG__', $this->get_log_directory(), $_MIDCOM->configuration->get('log_file'));
-        $this->log_file = str_replace('__SERVERNAME__', $_SERVER['SERVER_NAME'], $this->log_file);
+        
+        if (isset($_SERVER['SERVER_NAME']))
+        {
+            $this->log_file = str_replace('__SERVERNAME__', $_SERVER['SERVER_NAME'], $this->log_file);
+        }
+        else
+        {
+            $this->log_file = str_replace('__SERVERNAME__', 'CLI', $this->log_file);            
+        }
+        
         $this->log_file = str_replace('__LOGNAME__', $log_name, $this->log_file);
         
         if (   !is_writable($this->log_file)
