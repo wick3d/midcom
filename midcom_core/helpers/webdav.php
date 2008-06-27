@@ -261,11 +261,6 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
     {
         $info = $this->get_path_info($options['path']);
         
-        if (!is_null($info['object']))
-        {
-            return '405 Method not allowed';
-        }
-        
         // Creation support
         if (is_null($info['parent']))
         {
@@ -280,6 +275,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
         $page->up = $info['parent']->id;
         $page->name = basename($options['path']);
         $page->title = $page->name;
+        $page->info = 'active';
         if (!$page->create())
         {
             return false;
