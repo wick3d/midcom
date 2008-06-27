@@ -55,6 +55,9 @@ routes:
             - PROPFIND
             - OPTIONS
             - GET
+            - PUT
+            - MOVE
+        webdav_only: true
     page_edit:
         controller: midcom_core_controllers_page
         action: edit
