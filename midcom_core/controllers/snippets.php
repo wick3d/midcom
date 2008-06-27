@@ -25,7 +25,16 @@ class midcom_core_controllers_snippets
     private function get_snippetdir_children($snippetdir_id)
     {
         // Load children for PROPFIND purposes
-        $children = array();
+        $children = array
+        (
+            array
+            (
+                'uri'      => "{$_MIDCOM->context->prefix}__snippets{$this->object_path}/", // FIXME: dispatcher::generate_url
+                'title'    => $this->object_path,
+                'mimetype' => 'httpd/unix-directory',
+                'resource' => 'collection',
+            )
+        );
         
         // Snippetdirs
         $mc = midgard_snippetdir::new_collector('up', $snippetdir_id);
@@ -121,6 +130,19 @@ class midcom_core_controllers_snippets
             {
                 throw new midcom_exception_notfound("Snippetdir {$this->object_path} not found");
             }
+            
+            // Just put the snippet itself there
+            $data['children'] = array
+            (
+                array
+                (
+                    'uri'      => "{$_MIDCOM->context->prefix}__snippets{$this->object_path}", // FIXME: dispatcher::generate_url
+                    'title'    => $this->snippet->name,
+                    'mimetype' => 'text/plain',
+                    'size'     => $this->snippet->metadata->size,
+                    'revised'  => $this->snippet->metadata->revised,
+                )
+            );
             return;
         }
         
@@ -257,6 +279,27 @@ class midcom_core_controllers_snippets
         $this->snippetdir->up = $destination['snippetdir']->id;
         $this->snippetdir->name = $destination['name'];
         $this->snippetdir->update();
+    }
+    
+    public function get_object_webdav($route_id, &$data, $args)
+    {
+        if ($route_id == 'snippets_root')
+        {
+            return null;
+        }
+        
+        $object_path = '/' . implode('/', $args['variable_arguments']);
+        //echo "{$object_path}\n";
+        if ($this->get_snippetdir($object_path))
+        {
+            return $this->snippetdir;
+        }
+        if ($this->get_snippet($object_path))
+        {
+            return $this->snippet;
+        }
+        
+        return null;
     }
     
     public function action_webdav($route_id, &$data, $args)

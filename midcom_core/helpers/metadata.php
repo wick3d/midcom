@@ -93,6 +93,11 @@ class midcom_core_helpers_metadata
     public static function lock(&$object, $shared = false, $token = null)
     {
         $_MIDCOM->authorization->require_do('midgard:update', $object);
+        
+        // Re-fetch the object to be safe
+        $class = get_class($object);
+        $object = new $class($object->guid);
+        
         $object->metadata->locked = gmstrftime('%Y-%m-%d %T', time());
 
         if ($shared)
@@ -134,6 +139,10 @@ class midcom_core_helpers_metadata
     public static function unlock(&$object)
     {
         $_MIDCOM->authorization->require_do('midgard:update', $object);
+        
+        // Re-fetch the object to be safe
+        $class = get_class($object);
+        $object = new $class($object->guid);
         
         $allowed = false;
         if ($_MIDCOM->authentication->is_user())

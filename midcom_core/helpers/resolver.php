@@ -251,7 +251,7 @@ class midcom_core_helpers_resolver
         
         return array('route' => $selected_route_configuration,
                      'route_id' => $this->route_id,
-                     'actions_arguments' => array(),
+                     'action_arguments' => $this->action_arguments,
                      'page' => new midgard_page($this->page_id));
 
         // Handle allowed HTTP methods

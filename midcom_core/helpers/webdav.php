@@ -105,7 +105,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
     function PROPFIND(&$options, &$files) 
     {
         $this->filename_check();
-        
+
         $_MIDCOM->authorization->require_user();
 
         // Run the controller
@@ -119,6 +119,11 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
             // Controller did not return children
             $page = new midgard_page($_MIDCOM->context->page['guid']);
             $data['children'] = $this->get_node_children($page);
+        }
+        
+        if (empty($data['children']))
+        {
+            return false;
         }
         
         // Convert children to PROPFIND elements
@@ -348,30 +353,43 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
     function LOCK(&$options) 
     {
         $options['timeout'] = time() + $_MIDCOM->configuration->get('metadata_lock_timeout');
-        return "200 OK";
-        /*
+
+        // Run the controller
+        $controller = $this->controller;
+        $action_method = str_replace('action_', 'get_object_', $this->action_method);
+        
+        if (!method_exists($controller, $action_method))
+        {
+            throw new midcom_exception_httperror("Locking not allowed", 405);
+        }
+        
+        $data =& $options;
+        $object = $controller->$action_method($this->route_id, $data, $this->action_arguments);
+        if (!$object)
+        {
+            throw new midcom_exception_notfound("No lockable objects");
+        }
+
         $shared = false;
         if ($options['scope'] == 'shared')
         {
             $shared = true;
         }
         
-        if (is_null($info['object']))
+        if (is_null($object))
         {
             throw new midcom_exception_notfound("Not found");
         }
         
-        if (midcom_core_helpers_metadata::is_locked($info['object']))
+        if (midcom_core_helpers_metadata::is_locked($object))
         {
             $this->logger->log("Object is locked by another user");
             return "423 Locked";
         }
 
-        midcom_core_helpers_metadata::lock($info['object'], $shared, $options['locktoken']);
-        $options['timeout'] = time() + $_MIDCOM->configuration->get('metadata_lock_timeout');
+        midcom_core_helpers_metadata::lock($object, $shared, $options['locktoken']);
         
         return "200 OK";
-        */
     }
     
     /**
@@ -382,6 +400,31 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      */
     function UNLOCK(&$options) 
     {
+        // Run the controller
+        $controller = $this->controller;
+        $action_method = str_replace('action_', 'get_object_', $this->action_method);
+        
+        if (!method_exists($controller, $action_method))
+        {
+            throw new midcom_exception_httperror("Locking not allowed", 405);
+        }
+        
+        $data =& $options;
+        $object = $controller->$action_method($this->route_id, $data, $this->action_arguments);
+        if (!$object)
+        {
+            throw new midcom_exception_notfound("No lockable objects");
+        }
+        
+        if (midcom_core_helpers_metadata::is_locked($object ))
+        {
+            $this->logger->log("Object is locked by another user {$object->metadata->locker}");
+            return "423 Locked";
+        }
+
+        $this->logger->log("Unlocking");
+        midcom_core_helpers_metadata::unlock($object);
+
         return "200 OK";
     }
 
@@ -393,6 +436,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      */
     function checkLock($path) 
     {
+        $this->logger->log("CHECKLOCK: {$path}");
         if (isset($this->locks[$path]))
         {
             return $this->locks[$path];
@@ -420,15 +464,15 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
             $this->logger->log('Resolver got "' . $e->getMessage() . '"');
         }
 
-        if (!in_array('PROPFIND', $resolution['controller']['allowed_methods']))
+        if (!in_array('PROPFIND', $resolution['route']['allowed_methods']))
         {
             // No PROPFIND supported, so don't supply lock information either
             $this->locks[$path] = false;
             return $this->locks[$path];
         }
 
-        $controller_class = $resolution['controller']['controller'];
-        $action_method = "get_object_{$resolution['controller']['action']}";
+        $controller_class = $resolution['route']['controller'];
+        $action_method = "get_object_{$resolution['route']['action']}";
 
         if (!method_exists($controller_class, $action_method))
         {
@@ -441,7 +485,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
         $controller->dispatcher = $_MIDCOM->dispatcher;
 
         $data = array();
-        $object = $controller->$action_method($resolution['controller']['route_id'], $data, $resolution['controller']['route_id']);
+        $object = $controller->$action_method($resolution['route_id'], $data, $resolution['action_arguments']);
 
         if (!$object)
         {
