@@ -10,6 +10,7 @@ MidCOM 3 Roadmap
 * Basic authentication (DONE)
 * Cookie authentication (DONE)
 * Owner-based authorization provider (DONE)
+* Root-only routes (DONE)
 
 # 3.0.0alpha2
 

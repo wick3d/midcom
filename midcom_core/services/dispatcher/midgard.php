@@ -161,6 +161,9 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         $_MIDCOM->templating->append_directory($_MIDCOM->componentloader->component_to_filepath($this->component_name) . '/templates');
     }
     
+    /**
+     * Get route definitions
+     */
     public function get_routes()
     {
         $this->core_routes = $_MIDCOM->configuration->get('routes');
@@ -190,6 +193,17 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         $route_id_map = array();
         foreach ($route_definitions as $route_id => $route_configuration)
         {
+            if (   isset($route_configuration['root_only'])
+                && $route_configuration['root_only'])
+            {
+                // This route is to be run only with the root page
+                if ($_MIDCOM->context->page['id'] != $_MIDCOM->context->host->root)
+                {
+                    // We're not in root page, skip
+                    continue;
+                }
+            }
+        
             $route_id_map[$route_configuration['route']] = $route_id;
         }
         unset($route_configuration, $route_id);
