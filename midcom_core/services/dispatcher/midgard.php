@@ -18,6 +18,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
     public $argv = array();
     public $get = array();
     public $component_name = '';
+    public $request_method = 'GET';
     protected $route_id = false;
     protected $action_arguments = array();
     protected $core_routes = array();
@@ -29,6 +30,8 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         {
             $this->get = $_GET;
         }
+        
+        $this->request_method = $_SERVER['REQUEST_METHOD'];
         
         if (!extension_loaded('midgard'))
         {
@@ -220,9 +223,9 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
 
         // Handle allowed HTTP methods
         header('Allow: ' . implode(', ', $selected_route_configuration['allowed_methods']));
-        if (!in_array($_SERVER['REQUEST_METHOD'], $selected_route_configuration['allowed_methods']))
+        if (!in_array($this->request_method, $selected_route_configuration['allowed_methods']))
         {
-            throw new midcom_exception_httperror("{$_SERVER['REQUEST_METHOD']} not allowed", 405);
+            throw new midcom_exception_httperror("{$this->request_method} not allowed", 405);
         }
         
         // Initialize controller
@@ -234,7 +237,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         $action_method = "action_{$selected_route_configuration['action']}";
         
         // Handle HTTP request
-        switch ($_SERVER['REQUEST_METHOD'])
+        switch ($this->request_method)
         {
             case 'GET':
             case 'POST':

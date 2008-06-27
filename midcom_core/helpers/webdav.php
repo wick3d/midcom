@@ -214,27 +214,11 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      */
     public function MKCOL($options)
     {
-        $info = $this->get_path_info($options['path']);
-        
-        // Creation support
-        if (is_null($info['parent']))
-        {
-            $this->logger->log("No parent known");
-            throw new midcom_exception_notfound("Not found");
-        }
-        
-        $_MIDCOM->authorization->require_do('midgard:create', $info['parent']);
-        
-        $this->logger->log("Trying to create {$options['path']}");
-        $page = new midgard_page();
-        $page->up = $info['parent']->id;
-        $page->name = basename($options['path']);
-        $page->title = $page->name;
-        $page->info = 'active';
-        if (!$page->create())
-        {
-            return false;
-        }
+        // Run the controller
+        $controller = $this->controller;
+        $action_method = $this->action_method;
+        $data = array();
+        $controller->$action_method($this->route_id, $data, $this->action_arguments);
         
         return '201 Created';
     }

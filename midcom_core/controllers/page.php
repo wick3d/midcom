@@ -49,5 +49,26 @@ class midcom_core_controllers_page extends midcom_core_controllers_baseclasses_m
     public function populate_toolbar()
     {
     }
+
+    public function action_show($route_id, &$data, $args)
+    {
+        parent::action_show($route_id, &$data, $args);
+        
+        if ($route_id == 'page_variants')
+        {
+            switch ($this->dispatcher->request_method)
+            {
+                case 'MKCOL':
+                    // Create subpage
+                    $_MIDCOM->authorization->require_do('midgard:create', $data['object']);
+                    $this->prepare_new_object($args);
+                    $this->object->name = $args['name']['identifier'];    
+                    $this->object->create();
+                    break;
+                default:
+                    throw new midcom_exception_httperror("{$this->request_method} not allowed", 405);
+            }
+        }
+    }
 }
 ?>

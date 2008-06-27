@@ -39,6 +39,12 @@ routes:
             - OPTIONS
             - GET
             - PROPFIND
+    page_variants:
+        controller: midcom_core_controllers_page
+        action: show
+        route: /{$token:name}
+        allowed_methods:
+            - MKCOL
     page_edit:
         controller: midcom_core_controllers_page
         action: edit
