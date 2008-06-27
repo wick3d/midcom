@@ -25,7 +25,16 @@ class midcom_core_controllers_styles
     private function get_style_children($style_id)
     {
         // Load children for PROPFIND purposes
-        $children = array();
+        $children = array
+        (
+            array
+            (
+                'uri'      => "{$_MIDCOM->context->prefix}__styles{$this->object_path}/", // FIXME: dispatcher::generate_url
+                'title'    => $this->object_path,
+                'mimetype' => 'httpd/unix-directory',
+                'resource' => 'collection',
+            )
+        );
         
         // Styles
         $mc = midgard_style::new_collector('up', $style_id);
@@ -120,6 +129,19 @@ class midcom_core_controllers_styles
             {
                 throw new midcom_exception_notfound("Style {$this->object_path} not found");
             }
+            
+            // Just put the element itself there
+            $data['children'] = array
+            (
+                array
+                (
+                    'uri'      => "{$_MIDCOM->context->prefix}__styles{$this->object_path}", // FIXME: dispatcher::generate_url
+                    'title'    => $this->element->name,
+                    'mimetype' => 'text/plain',
+                    'size'     => $this->element->metadata->size,
+                    'revised'  => $this->element->metadata->revised,
+                )
+            );
             return;
         }
         
@@ -257,7 +279,27 @@ class midcom_core_controllers_styles
         $this->style->name = $destination['name'];
         $this->style->update();
     }
-    
+
+    public function get_object_webdav($route_id, &$data, $args)
+    {
+        if ($route_id == 'styles_root')
+        {
+            return null;
+        }
+        
+        $object_path = '/' . implode('/', $args['variable_arguments']);
+        if ($this->get_style($object_path))
+        {
+            return $this->style;
+        }
+        if ($this->get_elemet($object_path))
+        {
+            return $this->element;
+        }
+        
+        return null;
+    }
+
     public function action_webdav($route_id, &$data, $args)
     {
         if ($route_id == 'styles')
