@@ -78,103 +78,49 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
     function PROPFIND(&$options, &$files) 
     {
         $_MIDCOM->authorization->require_user();
-    
-        $info = $this->get_path_info();
+
+        // Run the controller
+        $controller = $this->controller;
+        $action_method = $this->action_method;
+        $data = array();
+        $controller->$action_method($this->route_id, $data, $this->action_arguments);
         
-        if (is_null($info['object']))
+        if (!isset($data['children']))
         {
-            $this->logger->log("404 Not Found");
-            throw new midcom_exception_notfound("Not found");
+            // Controller did not return children
+            $data['children'] = array();
         }
-
-        /*if (substr($_MIDCOM->dispatcher->argv[0], 0, 1) == '.')
-        {
-            $this->logger->log("Skipping dotfile, object is {$info['object']->guid}");
-            throw new midcom_exception_notfound("No dotfiles please");
-        }*/
-
-        $this->get_files_page($info['object'], &$files);
+        
+        // Get children from component instance
+        $page = new midgard_page($_MIDCOM->context->page['guid']);
+        $data['children'] = array_merge
+        (
+            $data['children'],
+            $_MIDCOM->context->component_instance->get_node_children($page)
+        );
+        
+        // Convert children to PROPFIND elements
+        $this->children_to_files($data['children'], &$files);
         
         return true;
     }
-    
-    private function get_files_page($page, &$files)
+
+    private function children_to_files($children, &$files)
     {
-        // Add the downloadable page itself
-        $conf = $this->get_files_stub();
-        $conf['props'][] = $this->mkprop('displayname', $page->title);
-        $conf['props'][] = $this->mkprop('resourcetype', '');
-        $conf['props'][] = $this->mkprop('getcontenttype', 'text/html');
-        $conf['props'][] = $this->mkprop('getcontentlength', strlen($page->content));
-        $conf['props'][] = $this->mkprop('getlastmodified', strtotime($page->metadata->revised));
-        $conf['path'] = "{$_MIDCOM->context->prefix}__content.html";
-        $files['files'][] = $conf;
-        
-        /*
-        $conf = $this->get_files_stub();
-        $conf['props'][] = $this->mkprop('displayname', $page->title);
-        $conf['props'][] = $this->mkprop('resourcetype', '');
-        $conf['props'][] = $this->mkprop('getcontenttype', 'text/xml');
-        //$conf['props'][] = $this->mkprop('getcontentlength', strlen($page->serialize()));
-        $conf['props'][] = $this->mkprop('getlastmodified', strtotime($page->metadata->revised));
-        $conf['path'] = "{$_MIDCOM->context->prefix}__midgard_page.xml";
-        $files['files'][] = $conf;
-        */
-            
-        $mc = midgard_page::new_collector('up', $page->id);
-        $mc->set_key_property('name');
-        $mc->add_value_property('title');
-        $mc->execute();
-        
-        $guids = $mc->list_keys();
-        foreach ($guids as $name => $array)
+        foreach ($children as $child)
         {
-            if (empty($name))
-            {
-                continue;
-            }
-            $subpage = $this->get_files_stub();
-            $subpage['props'][] = $this->mkprop('displayname', $mc->get_subkey($name, 'title'));
-            $subpage['props'][] = $this->mkprop('resourcetype', 'collection');
-            $subpage['props'][] = $this->mkprop('getcontenttype', 'httpd/unix-directory');
-            $subpage['path'] = "{$_MIDCOM->context->prefix}{$name}/";
-            $files['files'][] = $subpage;
+            $child_props = array
+            (
+                'props' => array(),
+                'path'  => $child['uri'],
+            );
+            $child_props['props'][] = $this->mkprop('displayname', $child['title']);
+            $child_props['props'][] = $this->mkprop('resourcetype', $child['resource']);
+            $child_props['props'][] = $this->mkprop('getcontenttype', $child['mimetype']);
+            $files['files'][] = $child_props;
         }
     }
-    
-    /*
-    private function get_files_snippetdir($snippetdir_id, &$files)
-    {
-        $this->logger->log("Snippetdir {$snippetdir_id}");
-        $mc = midgard_snippetdir::new_collector('up', $snippetdir_id);
-        $mc->set_key_property('name');
-        $mc->execute();
-        
-        $guids = $mc->list_keys();
-        foreach ($guids as $name => $array)
-        {
-            if (empty($name))
-            {
-                continue;
-            }
-            $page = $this->get_files_stub();
-            $page['props'][] = $this->mkprop('displayname', $name);
-            $page['props'][] = $this->mkprop('resourcetype', 'collection');
-            $page['props'][] = $this->mkprop('getcontenttype', 'httpd/unix-directory');
-            $page['path'] = "{$_MIDCOM->context->prefix}__snippets/{$name}/";
-            $files['files'][] = $page;
-        }
-    }
-    */
-    private function get_files_stub()
-    {
-        return array
-        (
-            'props' => array(),
-            'path'  => array(),
-        );
-    }
-    
+
     /**
      * GET method handler
      * 
