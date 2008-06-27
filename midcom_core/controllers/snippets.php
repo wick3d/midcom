@@ -180,27 +180,61 @@ class midcom_core_controllers_snippets
         
         $new_snippetdir->create();
     }
-    
-    private function handle_move($route_id, &$data)
+
+    private function check_destination($dest)
     {
-        if (!isset($data['dest']))
+        if (!isset($dest))
         {
             throw new Exception("No destination defined");
         }
 
         $snippets_prefix = '__snippets';
-        if (substr($data['dest'], 0, strlen($snippets_prefix)) != $snippets_prefix)
+        if (substr($dest, 0, strlen($snippets_prefix)) != $snippets_prefix)
         {
-            throw new Exception("Invalid destination {$data['dest']}");
+            throw new Exception("Invalid destination {$dest}");
         }
         
-        $destination_object_path = dirname(substr($data['dest'], strlen($snippets_prefix)));
+        $destination_object_path = dirname(substr($dest, strlen($snippets_prefix)));
         if (!$this->get_snippetdir($destination_object_path))
         {
             throw new Exception("No snippetdir {$destination_object_path} found");
         }
         
-        $destination_snippetdir = $this->snippetdir;
+        $destination['snippetdir'] = $this->snippetdir;
+        $destination['name'] = basename($dest);
+        
+        return $destination;
+    }
+
+    private function handle_copy($route_id, &$data)
+    {
+        $destination = $this->check_destination($data['dest']);
+        
+        if (!$this->get_snippetdir($this->object_path))
+        {
+            // Possibly copying snippets instead
+            if (!$this->get_snippet($this->object_path))
+            {
+                throw new midcom_exception_notfound("Snippetdir {$this->object_path} not found");
+            }
+
+            $new_snippet = new midgard_snippet();
+            $new_snippet->up = $destination['snippetdir']->id;
+            $new_snippet->name = str_replace('.php', '', $destination['name']);
+            $new_snippet->code = $this->snippet->code;
+            $new_snippet->create();
+            return;
+        }
+
+        $new_snippetdir = new midgard_snippetdir();
+        $new_snippetdir->up = $destination['snippetdir']->id;
+        $new_snippetdir->name = $destination['name'];
+        $new_snippetdir->create();
+    }
+
+    private function handle_move($route_id, &$data)
+    {
+        $destination = $this->check_destination($data['dest']);
         
         if (!$this->get_snippetdir($this->object_path))
         {
@@ -210,14 +244,14 @@ class midcom_core_controllers_snippets
                 throw new midcom_exception_notfound("Snippetdir {$this->object_path} not found");
             }
 
-            $this->snippet->up = $destination_snippetdir->id;
-            $this->snippet->name = str_replace('.php', '', basename($data['dest']));
+            $this->snippet->up = $destination['snippetdir']->id;
+            $this->snippet->name = str_replace('.php', '', $destination['name']);
             $this->snippet->update();
             return;
         }
 
-        $this->snippetdir->up = $destination_snippetdir->id;
-        $this->snippetdir->name = basename($data['dest']);
+        $this->snippetdir->up = $destination['snippetdir']->id;
+        $this->snippetdir->name = $destination['name'];
         $this->snippetdir->update();
     }
     
@@ -262,6 +296,10 @@ class midcom_core_controllers_snippets
 
             case 'MOVE':
                 $this->handle_move($route_id, &$data);
+                return;
+
+            case 'COPY':
+                $this->handle_copy($route_id, &$data);
                 return;
         }
 

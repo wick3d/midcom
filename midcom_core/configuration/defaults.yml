@@ -57,6 +57,7 @@ routes:
             - GET
             - PUT
             - MOVE
+            - COPY
         webdav_only: true
     page_edit:
         controller: midcom_core_controllers_page

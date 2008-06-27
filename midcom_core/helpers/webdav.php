@@ -267,6 +267,23 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
     }
 
     /**
+     * COPY method handler
+     *
+     * @param  array  general parameter passing array
+     * @return bool   true on success
+     */
+    function COPY($options) 
+    {
+        // Run the controller
+        $controller = $this->controller;
+        $action_method = $this->action_method;
+        $data =& $options;
+        $controller->$action_method($this->route_id, $data, $this->action_arguments);
+        
+        return true;
+    }
+
+    /**
      * LOCK method handler
      *
      * @param  array  general parameter passing array
@@ -375,7 +392,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
      */
 
     /**
-     * No authentication is needed here
+     * Handle HTTP Basic authentication using MidCOM's authentication service
      *
      * @access private
      * @param  string  HTTP Authentication type (Basic, Digest, ...)
