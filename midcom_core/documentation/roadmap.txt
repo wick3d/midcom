@@ -6,7 +6,8 @@ MidCOM 3 Roadmap
 * Component API (DONE)
 * MVC API (DONE)
 * Released as simple tarball
-* WebDAV for page management
+* Component-specific WebDAV extension (DONE)
+* WebDAV for page management (PARTIALLY DONE)
 * Basic authentication (DONE)
 * Cookie authentication (DONE)
 * Owner-based authorization provider (DONE)
@@ -14,7 +15,7 @@ MidCOM 3 Roadmap
 
 # 3.0.0alpha2
 
-* Package management (PEAR or Git)
+* Package management: PEAR, Phar or Git
 * l10n service
 * Component extension support
 * Metadata service
@@ -22,7 +23,6 @@ MidCOM 3 Roadmap
 
 # 3.0.0alpha3
 
-* Component-specific WebDAV extension
 * ACL-based authorization provider
 * Attachment support
 * Permanent linking support
