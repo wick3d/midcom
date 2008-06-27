@@ -63,9 +63,10 @@ class midcom_core_helpers_resolver
     
     private function resolve_page($path)
     {
-        $temp = $path;
+        $temp = trim($path);
         $parent_id = $_MIDCOM->context->host->root;
-        $path = explode('/', $path);
+        $this->page_id = $parent_id;
+        $path = explode('/', trim($path));
         foreach($path as $p)
         {
             if(strlen(trim($p)) == 0)
@@ -78,7 +79,7 @@ class midcom_core_helpers_resolver
             $res = $qb->execute();
             if(count($res) != 1)
             {
-                die("Unable to resolve.");
+                break;            
             }
             $parent_id = $res[0]->id;
             $temp = substr($temp, 1+strlen($p));
@@ -248,7 +249,7 @@ class midcom_core_helpers_resolver
 
         $selected_route_configuration = $route_definitions[$this->route_id];
         
-        return array('controller' => $selected_route_configuration,
+        return array('route' => $selected_route_configuration,
                      'page' => new midgard_page($this->page_id));
 
         // Handle allowed HTTP methods
