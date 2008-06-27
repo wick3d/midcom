@@ -265,12 +265,11 @@ class midcom_core_services_configuration_yaml implements midcom_core_services_co
          * $matches[1] = /some/route/
          * $matches[2] = somedata
          */
-        preg_match('%([^@]*)@(.*)%', $route, $matches);
+        preg_match('%([^@]*)@%', $route, $matches);
         
         if(count($matches) > 0)
         {
-            $route = $matches[1];
-            $route_args = explode('/', $matches[2]);
+            $route_args = true;
         }
         
         $route = $this->normalize_route_path($route);

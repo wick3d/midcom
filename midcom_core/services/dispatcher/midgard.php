@@ -21,6 +21,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
     public $request_method = 'GET';
     protected $route_id = false;
     protected $action_arguments = array();
+    protected $route_arguments = array();
     protected $core_routes = array();
     protected $component_routes = array();
 
@@ -361,13 +362,12 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
     {
         // make a normalized string of $argv
         $argv_str = preg_replace('%/{2,}%', '/', '/' . implode('/', $this->argv) . '/');
+        
         foreach ($routes as $route => $route_id)
         {
             // Reset variables
             $this->action_arguments = array();
             list ($route_path, $route_get, $route_args) = $_MIDCOM->configuration->split_route($route);
-
-            //echo "DEBUG: route_id: {$route_id} route:{$route} argv_str:{$argv_str}\n";
 
             if (!preg_match_all('%\{\$(.+?)\}%', $route_path, $route_path_matches))
             {
@@ -381,6 +381,18 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                     $this->route_id = $route_id;
                     $_MIDCOM->context->route_id = $this->route_id;
                     return true;
+                }
+                if( $route_args) // Route @ set
+                {
+                    $path = explode('@',$route_path);
+                    if( preg_match("%{$path[0]}/(.*)%", $argv_str, $matches))
+                    {
+                        $this->route_id = $route_id;
+                        $this->route_arguments = explode('/', $matches[1]);
+                        $_MIDCOM->context->route_id = $this->route_id;
+                        $_MIDCOM->context->route_arguments = $this->route_arguments;
+                        return true;
+                    }
                 }
                 // Did not match, try next route
                 continue;
