@@ -30,5 +30,10 @@ abstract class midcom_core_component_baseclass implements midcom_core_component_
     public function on_initialize()
     {
     }
+    
+    public function get_node_children(midgard_page $node)
+    {
+        return array();
+    }
 }
 ?>

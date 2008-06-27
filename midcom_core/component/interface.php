@@ -19,6 +19,8 @@ interface midcom_core_component_interface
     
     public function initialize();
     
-    function on_initialize();
+    public function on_initialize();
+    
+    public function get_node_children(midgard_page $node);
 }
 ?>
