@@ -212,7 +212,6 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
             }
             $route_id_map[] = array('route' => $route_configuration['route'],
                                     'route_id' => $route_id);
-//            $route_id_map[$route_configuration['route']] = $route_id;
         }
         unset($route_configuration, $route_id);
         if (!$this->route_matches($route_id_map))
@@ -403,6 +402,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         {
             $route = $r['route'];
             $route_id = $r['route_id'];
+            
             // Reset variables
             $this->action_arguments = array();
             list ($route_path, $route_get, $route_args) = $_MIDCOM->configuration->split_route($route);
@@ -417,8 +417,6 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                 {
                     // echo "DEBUG: simple match route_id:{$route_id}\n";
                     $this->route_array[] = $route_id;
-                    //$_MIDCOM->context->route_id = $this->route_id;
-                    //return true;
                 }
                 if ($route_args) // Route @ set
                 {
@@ -427,8 +425,6 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                     {
                         $this->route_array[] = $route_id;
                         $this->action_arguments['variable_arguments'] = explode('/', $matches[1]);
-                        //$_MIDCOM->context->route_id = $this->route_id;
-                        //return true;
                     }
                 }
                 // Did not match, try next route
@@ -458,7 +454,6 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
 
             // We have a complete match, setup route_id arguments and return
             $this->route_array[] = $route_id;
-            //$_MIDCOM->context->route_id = $this->route_id;
             // Map variable arguments
             
             foreach ($route_path_matches[1] as $index => $varname)
@@ -494,8 +489,6 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                     {
                         $this->route_array[] = $route_id;
                         $this->action_arguments = explode('/', $matches[1]);
-                        //$_MIDCOM->context->route_id = $this->route_id;
-                        //return true;
                     }
                 }
                 
