@@ -19,11 +19,13 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
     public $get = array();
     public $component_name = '';
     public $request_method = 'GET';
+    protected $route_array = array();
     protected $route_id = false;
     protected $action_arguments = array();
     protected $route_arguments = array();
     protected $core_routes = array();
     protected $component_routes = array();
+    protected $route_definitions = null;
 
     public function __construct()
     {
@@ -192,10 +194,10 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         {
             $_MIDCOM->timer->setMarker('MidCOM dispatcher::dispatch');
         }
-        $route_definitions = $this->get_routes();
-
+        $this->route_definitions = $this->get_routes();
+        
         $route_id_map = array();
-        foreach ($route_definitions as $route_id => $route_configuration)
+        foreach ($this->route_definitions as $route_id => $route_configuration)
         {
             if (   isset($route_configuration['root_only'])
                 && $route_configuration['root_only'])
@@ -207,20 +209,30 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                     continue;
                 }
             }
-        
-            $route_id_map[$route_configuration['route']] = $route_id;
+            $route_id_map[] = array('route' => $route_configuration['route'],
+                                    'route_id' => $route_id);
+//            $route_id_map[$route_configuration['route']] = $route_id;
         }
         unset($route_configuration, $route_id);
-
         if (!$this->route_matches($route_id_map))
         {
             // TODO: Check message
             throw new midcom_exception_notfound('No route matches current URL');
         }
         unset($route_id_map);
-
-        $selected_route_configuration = $route_definitions[$this->route_id];
-
+        foreach($this->route_array as $route)
+        {
+            $this->dispatch_route($route);
+                        break; // if we get here, controller run succesfully
+        }
+    }
+    
+    private function dispatch_route($route)
+    {
+        $this->route_id = $route;
+        $_MIDCOM->context->route_id = $this->route_id;
+        $selected_route_configuration = $this->route_definitions[$this->route_id];
+        
         // Handle allowed HTTP methods
         header('Allow: ' . implode(', ', $selected_route_configuration['allowed_methods']));
         if (!in_array($this->request_method, $selected_route_configuration['allowed_methods']))
@@ -232,14 +244,14 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         $controller_class = $selected_route_configuration['controller'];
         $controller = new $controller_class($_MIDCOM->context->component_instance);
         $controller->dispatcher = $this;
-        
+    
         // Define the action method for the route_id
         $action_method = "action_{$selected_route_configuration['action']}";
-        
+    
         // Handle HTTP request
         if (   isset($selected_route_configuration['webdav_only'])
-            && $selected_route_configuration['webdav_only']
-            || (   $this->request_method != 'GET'
+                && $selected_route_configuration['webdav_only']
+                || (   $this->request_method != 'GET'
                 && $this->request_method != 'POST')
             )
         {
@@ -269,6 +281,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         }
         
         $this->data_to_context($selected_route_configuration, $data);
+
     }
     
     private function is_core_route($route_id)
@@ -361,8 +374,11 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         // make a normalized string of $argv
         $argv_str = preg_replace('%/{2,}%', '/', '/' . implode('/', $this->argv) . '/');
         
-        foreach ($routes as $route => $route_id)
+//        foreach ($routes as $route => $route_id)
+        foreach ($routes as $r)
         {
+            $route = $r['route'];
+            $route_id = $r['route_id'];
             // Reset variables
             $this->action_arguments = array();
             list ($route_path, $route_get, $route_args) = $_MIDCOM->configuration->split_route($route);
@@ -375,20 +391,20 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                         || $this->get_matches($route_get, $route))
                     )
                 {
-                    //echo "DEBUG: simple match route_id:{$route_id}\n";
-                    $this->route_id = $route_id;
-                    $_MIDCOM->context->route_id = $this->route_id;
-                    return true;
+                    // echo "DEBUG: simple match route_id:{$route_id}\n";
+                    $this->route_array[] = $route_id;
+                    //$_MIDCOM->context->route_id = $this->route_id;
+                    //return true;
                 }
                 if ($route_args) // Route @ set
                 {
                     $path = explode('@', $route_path);
                     if (preg_match('%' . str_replace('/', '\/', $path[0]) . '/(.*)\/%', $argv_str, $matches))
                     {
-                        $this->route_id = $route_id;
+                        $this->route_array[] = $route_id;
                         $this->action_arguments['variable_arguments'] = explode('/', $matches[1]);
-                        $_MIDCOM->context->route_id = $this->route_id;
-                        return true;
+                        //$_MIDCOM->context->route_id = $this->route_id;
+                        //return true;
                     }
                 }
                 // Did not match, try next route
@@ -417,8 +433,8 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
             }
 
             // We have a complete match, setup route_id arguments and return
-            $this->route_id = $route_id;
-            $_MIDCOM->context->route_id = $this->route_id;
+            $this->route_array[] = $route_id;
+            //$_MIDCOM->context->route_id = $this->route_id;
             // Map variable arguments
             
             foreach ($route_path_matches[1] as $index => $varname)
@@ -452,18 +468,22 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                     $path = explode('@', $route_path);
                     if (preg_match('%' . str_replace('/', '\/', preg_replace('%\{(.+?)\}%', '([^/]+?)', $path[0])) . '/(.*)\/%', $argv_str, $matches))
                     {
-                        $this->route_id = $route_id;
+                        $this->route_array[] = $route_id;
                         $this->action_arguments = explode('/', $matches[1]);
-                        $_MIDCOM->context->route_id = $this->route_id;
-                        return true;
+                        //$_MIDCOM->context->route_id = $this->route_id;
+                        //return true;
                     }
                 }
                 
             }
-            return true;
+            //return true;
         }
         // No match
-        return false;
+        if(count($this->route_array) == 0)
+        {
+            return false;
+        }
+        return true;
     }
 
     /**
