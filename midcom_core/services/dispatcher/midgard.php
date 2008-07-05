@@ -26,6 +26,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
     protected $core_routes = array();
     protected $component_routes = array();
     protected $route_definitions = null;
+    protected $exceptions_stack = array();
 
     public function __construct()
     {
@@ -220,10 +221,33 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
             throw new midcom_exception_notfound('No route matches current URL');
         }
         unset($route_id_map);
-        foreach($this->route_array as $route)
+        
+        $success_flag = true; // Flag to tell if route ran successfully
+        
+        foreach ($this->route_array as $route)
         {
-            $this->dispatch_route($route);
-                        break; // if we get here, controller run succesfully
+            try
+            {
+                $success_flag = true; // before trying route it's marked success
+                $this->dispatch_route($route);
+            }
+            catch (Exception $e)
+            {
+                $this->exceptions_stack[] = $e; // Adding exception to exceptions stack
+                $success_flag = false; // route failed
+            }
+            if( $success_flag) // Checking for success
+            {
+                break; // if we get here, controller run succesfully so bailing out from the loop
+            }
+        } // ending foreach
+        
+        if(!$success_flag) // if foreach is over and success flag is false throwing exeption
+        {
+            /** 
+              * @Todo: Dump better output if all routematches fail to handle
+              */
+            throw new midcom_exception_notfound('All routes failed to handle the request');
         }
     }
     
