@@ -246,7 +246,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
             /** 
               * @Todo: Dump better output if all routematches fail to handle
               */
-            throw new midcom_exception_notfound('All routes failed to handle the request');
+            throw new midcom_exception_allroutesfailed(&$this->exceptions_stack);
         }
     }
     

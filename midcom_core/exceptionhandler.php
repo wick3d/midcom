@@ -24,7 +24,6 @@ class midcom_core_exceptionhandler
             case 'midcom_exception_httperror':
                 $http_code = $exception->getCode();
                 break;
-
             default:
                 $http_code = 500;
                 break;
@@ -112,6 +111,22 @@ class midcom_exception_notfound extends Exception
     // Redefine the exception so message isn't optional
     public function __construct($message, $code = 404) 
     {
+        parent::__construct($message, $code);
+    }
+}
+
+class midcom_exception_allroutesfailed extends Exception
+{
+    // FIXME: Some more elegant way to output the worst failure
+    // Redefine the exception so message isn't optional
+    public function __construct($message, $code = 500) 
+    {
+        $string = ("Exception message stack");
+        foreach($message as $m)
+        {
+            $string .= "{$m->message}\n"; 
+        }
+        $message = $string;
         parent::__construct($message, $code);
     }
 }
