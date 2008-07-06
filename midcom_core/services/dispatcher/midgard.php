@@ -182,7 +182,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         
         $this->component_routes = $_MIDCOM->configuration->normalize_routes($_MIDCOM->context->component_instance->configuration->get('routes'));
         
-        return array_merge($this->core_routes, $this->component_routes);
+        return array_merge($this->component_routes, $this->core_routes);
     }
 
 
