@@ -246,6 +246,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
             /** 
               * @Todo: Dump better output if all routematches fail to handle
               */
+            $messages = '';
             foreach ($this->exceptions_stack as $exception)
             {
                 switch (get_class($exception))
@@ -256,9 +257,12 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                     case 'midcom_exception_httperror':
                         throw $exception;
                         // This will exit
+                    default:
+                        $messages .= $exception->getMessage() . "\n";
+                        break;
                 }
             }
-            throw new midcom_exception_notfound("No route matches");
+            throw new midcom_exception_notfound($messages);
         }
     }
     
