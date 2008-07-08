@@ -115,22 +115,6 @@ class midcom_exception_notfound extends Exception
     }
 }
 
-class midcom_exception_allroutesfailed extends Exception
-{
-    // FIXME: Some more elegant way to output the worst failure
-    // Redefine the exception so message isn't optional
-    public function __construct($message, $code = 500) 
-    {
-        $string = ("Exception message stack");
-        foreach($message as $m)
-        {
-            $string .= "{$m->message}\n"; 
-        }
-        $message = $string;
-        parent::__construct($message, $code);
-    }
-}
-
 /**
  * MidCOM 3 "unauthorized" exception
  *

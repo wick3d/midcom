@@ -246,7 +246,19 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
             /** 
               * @Todo: Dump better output if all routematches fail to handle
               */
-            throw new midcom_exception_allroutesfailed(&$this->exceptions_stack);
+            foreach ($this->exceptions_stack as $exception)
+            {
+                switch (get_class($exception))
+                {
+                    case 'midcom_exception_unauthorized':
+                        throw $exception;
+                        // This will exit
+                    case 'midcom_exception_httperror':
+                        throw $exception;
+                        // This will exit
+                }
+            }
+            throw new midcom_exception_notfound("No route matches");
         }
     }
     
