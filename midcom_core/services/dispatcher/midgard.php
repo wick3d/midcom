@@ -396,6 +396,8 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
     {
         // make a normalized string of $argv
         $argv_str = preg_replace('%/{2,}%', '/', '/' . implode('/', $this->argv) . '/');
+
+        $this->action_arguments = array();
         
 //        foreach ($routes as $route => $route_id)
         foreach ($routes as $r)
@@ -404,7 +406,6 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
             $route_id = $r['route_id'];
             
             // Reset variables
-            $this->action_arguments = array();
             list ($route_path, $route_get, $route_args) = $_MIDCOM->configuration->split_route($route);
             
             if (!preg_match_all('%\{\$(.+?)\}%', $route_path, $route_path_matches))
