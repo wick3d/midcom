@@ -55,8 +55,6 @@ class midcom_core_services_dispatcher_midgard2 extends midcom_core_services_disp
      */
     public function populate_environment_data()
     {
-        $page_data = array();
-
         $prefix = "{$_MIDGARD_CONNECTION->request_config->host->prefix}/";
         foreach ($_MIDGARD_CONNECTION->request_config->pages as $page)
         {
@@ -66,15 +64,10 @@ class midcom_core_services_dispatcher_midgard2 extends midcom_core_services_disp
             }
             $current_page = $page;
         }
-        
-        $page_data['id'] = $current_page->id;
-        $page_data['guid'] = $current_page->guid;
-        $page_data['title'] = $current_page->title;
-        $page_data['content'] = $current_page->content;
 
         $_MIDCOM->context->component = $current_page->component;
         
-        $_MIDCOM->context->page = $page_data;
+        $_MIDCOM->context->page = $current_page;
         $_MIDCOM->context->prefix = $prefix;
         $_MIDCOM->context->host = $_MIDGARD_CONNECTION->request_config->host;
         

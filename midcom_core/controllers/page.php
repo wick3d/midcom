@@ -20,19 +20,18 @@ class midcom_core_controllers_page extends midcom_core_controllers_baseclasses_m
     
     public function load_object($args)
     {
-        if (!isset($_MIDCOM->context->page['id']))
+        if (!isset($_MIDCOM->context->page->id))
         {
             throw new midcom_exception_notfound("No Midgard page found");
         }
         
-        $this->object = new midgard_page();
-        $this->object->get_by_id($_MIDCOM->context->page['id']);
+        $this->object = $_MIDCOM->context->page;
     }
     
     public function prepare_new_object($args)
     {
         $this->object = new midgard_page();
-        $this->object->up = $_MIDCOM->context->page['id'];
+        $this->object->up = $_MIDCOM->context->page->id;
         $this->object->info = 'active';
     }
     

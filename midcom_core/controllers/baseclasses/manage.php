@@ -105,8 +105,7 @@ abstract class midcom_core_controllers_baseclasses_manage
         }
         
         $data['object'] =& $this->object;
-        $data['parent'] = new midgard_page();
-        $data['parent']->get_by_id($_MIDCOM->context->page['id']);
+        $data['parent'] = $_MIDCOM->context->page;
         
         $_MIDCOM->authorization->require_do('midgard:create', $data['parent']);
 

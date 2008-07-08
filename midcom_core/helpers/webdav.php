@@ -117,8 +117,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
         if (!isset($data['children']))
         {
             // Controller did not return children
-            $page = new midgard_page($_MIDCOM->context->page['guid']);
-            $data['children'] = $this->get_node_children($page);
+            $data['children'] = $this->get_node_children($_MIDCOM->context->page);
         }
         
         if (empty($data['children']))
@@ -169,7 +168,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
     {
         // Load children for PROPFIND purposes
         $children = array();
-        $mc = midgard_page::new_collector('up', $_MIDCOM->context->page['id']);
+        $mc = midgard_page::new_collector('up', $node->id);
         $mc->set_key_property('name');
         $mc->add_value_property('title');
         $mc->execute(); 
@@ -189,7 +188,7 @@ class midcom_core_helpers_webdav extends HTTP_WebDAV_Server
             );
         }
         
-        if ($_MIDCOM->context->page['id'] == $_MIDCOM->context->host->root)
+        if ($_MIDCOM->context->page->id == $_MIDCOM->context->host->root)
         {
             // Additional "special" URLs
             $children[] = array

@@ -68,38 +68,20 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
      */
     public function populate_environment_data()
     {
-        $page_data = array();
-        $mc = midgard_page::new_collector('id', $_MIDGARD['page']);
-        $mc->set_key_property('guid');
-        $mc->add_value_property('title');
-        $mc->add_value_property('content');
-        $mc->add_value_property('component');
+        $page = new midgard_page();
+        $page->get_by_id($_MIDGARD['page']);
         
         // Style handling
-        $style_id = $_MIDGARD['style'];
-        $mc->add_value_property('style');
-        
-        $mc->execute();
-        $guids = $mc->list_keys();
-        foreach ($guids as $guid => $array)
+        if (!$page->style)
         {
-            $page_data['id'] = $_MIDGARD['page'];
-            $page_data['guid'] = $guid;
-            $page_data['title'] = $mc->get_subkey($guid, 'title');
-            $page_data['content'] = $mc->get_subkey($guid, 'content');
-
-            $page_style = $mc->get_subkey($guid, 'style');
-            if ($page_style)
-            {
-                $style_id = $page_style;
-            }
-            
-            $_MIDCOM->context->component = $mc->get_subkey($guid, 'component');
+            $style_id = $_MIDGARD['style'];
         }
         
-        $_MIDCOM->context->page = $page_data;
+        $_MIDCOM->context->page = $page;
         $_MIDCOM->context->prefix = $_MIDGARD['self'];
         $_MIDCOM->context->uri = $_MIDGARD['uri'];
+        $_MIDCOM->context->component = $page->component;
+        
         $host = new midgard_host();
         $host->get_by_id($_MIDGARD['host']);
         $_MIDCOM->context->host = $host;
@@ -159,11 +141,8 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         }
         
         // In main Midgard request we dispatch the component in connection to a page
-        $page = new midgard_page();
-        $page->get_by_id($_MIDGARD['page']);
-        
         $this->component_name = $component;
-        $_MIDCOM->context->component_instance = $_MIDCOM->componentloader->load($this->component_name, $page);
+        $_MIDCOM->context->component_instance = $_MIDCOM->componentloader->load($this->component_name, $_MIDCOM->context->page);
         $_MIDCOM->templating->append_directory($_MIDCOM->componentloader->component_to_filepath($this->component_name) . '/templates');
     }
     
@@ -204,7 +183,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                 && $route_configuration['root_only'])
             {
                 // This route is to be run only with the root page
-                if ($_MIDCOM->context->page['id'] != $_MIDCOM->context->host->root)
+                if ($_MIDCOM->context->page->id != $_MIDCOM->context->host->root)
                 {
                     // We're not in root page, skip
                     continue;
@@ -235,17 +214,15 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                 $this->exceptions_stack[] = $e; // Adding exception to exceptions stack
                 $success_flag = false; // route failed
             }
-            if( $success_flag) // Checking for success
+            if ($success_flag) // Checking for success
             {
                 break; // if we get here, controller run succesfully so bailing out from the loop
             }
         } // ending foreach
         
-        if(!$success_flag) // if foreach is over and success flag is false throwing exeption
+        if (!$success_flag) 
         {
-            /** 
-              * @Todo: Dump better output if all routematches fail to handle
-              */
+            // if foreach is over and success flag is false throwing exeption
             $messages = '';
             foreach ($this->exceptions_stack as $exception)
             {
