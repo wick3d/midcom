@@ -214,6 +214,21 @@ class midcom_core_services_configuration_yaml implements midcom_core_services_co
                 );
             }
             
+            if (!$_MIDCOM->configuration->get('enable_webdav'))
+            {
+                // Only allow GET and POST
+                $route['allowed_methods'] = array
+                (
+                    'GET',
+                    'POST',
+                );
+            }
+            
+            if (!isset($route['webdav_only']))
+            {
+                $route['webdav_only'] = false;
+            }
+            
             if (!isset($route['template_entry_point']))
             {
                 // Add default HTTP allowed methods

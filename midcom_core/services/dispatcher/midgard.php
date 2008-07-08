@@ -272,15 +272,15 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         $action_method = "action_{$selected_route_configuration['action']}";
     
         // Handle HTTP request
-        if (   isset($selected_route_configuration['webdav_only'])
-                && $selected_route_configuration['webdav_only']
-                || (   $this->request_method != 'GET'
+        if (   $_MIDCOM->configuration->get('enable_webdav')
+            && $selected_route_configuration['webdav_only']
+            || (   $this->request_method != 'GET'
                 && $this->request_method != 'POST')
             )
         {
             // Start the full WebDAV server instance
             $webdav_server = new midcom_core_helpers_webdav($controller);
-            $webdav_server->serve($this->route_id, $action_method, $this->action_arguments);
+            $webdav_server->serve($this->route_id, $action_method, $this->action_arguments[$this->route_id]);
             // This will exit
         }
 
@@ -290,11 +290,11 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         {
             $_MIDCOM->timer->setMarker('MidCOM dispatcher::dispatch::call action');
         }
-        
+
         // Run the route and set appropriate data
         try
         {
-            $controller->$action_method($this->route_id, $data, $this->action_arguments);
+            $controller->$action_method($this->route_id, $data, $this->action_arguments[$this->route_id]);
         }
         catch (Exception $e)
         {
@@ -405,6 +405,8 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
             $route = $r['route'];
             $route_id = $r['route_id'];
             
+            $this->action_arguments[$route_id] = array();
+            
             // Reset variables
             list ($route_path, $route_get, $route_args) = $_MIDCOM->configuration->split_route($route);
             
@@ -425,7 +427,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                     if (preg_match('%' . str_replace('/', '\/', $path[0]) . '/(.*)\/%', $argv_str, $matches))
                     {
                         $this->route_array[] = $route_id;
-                        $this->action_arguments['variable_arguments'] = explode('/', $matches[1]);
+                        $this->action_arguments[$route_id]['variable_arguments'] = explode('/', $matches[1]);
                     }
                 }
                 // Did not match, try next route
@@ -476,11 +478,11 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                 if ($type_hint == 'token')
                 {
                     // Tokenize the argument to handle resource typing
-                    $this->action_arguments[$varname] = $this->tokenize_argument($this->get[$get_key]);
+                    $this->action_arguments[$route_id][$varname] = $this->tokenize_argument($this->get[$get_key]);
                 }
                 else
                 {
-                    $this->action_arguments[$varname] = $route_path_regex_matches[$index + 1];
+                    $this->action_arguments[$route_id][$varname] = $route_path_regex_matches[$index + 1];
                 }
                 
                 if (preg_match('%@%', $route, $match)) // Route @ set
@@ -489,7 +491,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                     if (preg_match('%' . str_replace('/', '\/', preg_replace('%\{(.+?)\}%', '([^/]+?)', $path[0])) . '/(.*)\/%', $argv_str, $matches))
                     {
                         $this->route_array[] = $route_id;
-                        $this->action_arguments = explode('/', $matches[1]);
+                        $this->action_arguments[$route_id] = explode('/', $matches[1]);
                     }
                 }
                 
@@ -511,6 +513,8 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
      * @param string $route_get GET part of a route definition
      * @param string $route full route definition (used only for error reporting)
      * @return boolean indicating match/no match
+     *
+     * @fixme Move action arguments to subarray
      */
     private function get_matches(&$route_get, &$route)
     {

@@ -39,6 +39,14 @@ routes:
             - OPTIONS
             - GET
             - PROPFIND
+    page_variants:
+        controller: midcom_core_controllers_page
+        action: show
+        route: /{$token:variant}
+        allowed_methods:
+            - OPTIONS
+            - GET
+            - PROPFIND
     snippets_root:
         controller: midcom_core_controllers_snippets
         action: webdav
