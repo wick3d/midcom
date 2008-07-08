@@ -473,15 +473,14 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
             
             foreach ($route_path_matches[1] as $index => $varname)
             {
-                preg_match('%/{\$([a-zA-Z]+):([a-zA-Z]+)}/%', $varname, $matches);
-                
-                if(count($matches) == 0)
+                $variable_parts = explode(':', $varname);
+                if(count($variable_parts) == 1)
                 {
                     $type_hint = '';
                 }
                 else
                 {
-                    $type_hint = $matches[1];
+                    $type_hint = $variable_parts[0];
                 }
                                 
                 // Strip type hints from variable names
@@ -490,7 +489,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
                 if ($type_hint == 'token')
                 {
                     // Tokenize the argument to handle resource typing
-                    $this->action_arguments[$route_id][$varname] = $this->tokenize_argument($this->get[$get_key]);
+                    $this->action_arguments[$route_id][$varname] = $this->tokenize_argument($route_path_regex_matches[$index + 1]);
                 }
                 else
                 {
@@ -516,6 +515,42 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
             return false;
         }
         return true;
+    }
+    
+    private function tokenize_argument($argument)
+    {
+        $tokens = array
+        (
+            'identifier' => '',
+            'variant'    => '',
+            'language'   => '',
+            'type'       => 'html',
+        );
+        $argument_parts = explode('.', $argument);
+
+        // First part is always identifier
+        $tokens['identifier'] = $argument_parts[0];
+        
+        if (count($argument_parts) >= 2)
+        {
+            // If there are two or more parts, then second is variant
+            $tokens['variant'] = $argument_parts[1];
+        }
+        
+        if (count($argument_parts) >= 3)
+        {
+            // If there are three parts, then third is type
+            $tokens['type'] = $argument_parts[2];
+        }
+
+        if (count($argument_parts) >= 4)
+        {
+            // If there are four or more parts, then third is language and fourth is type
+            $tokens['language'] = $argument_parts[2];
+            $tokens['type'] = $argument_parts[3];
+        }
+        
+        return $tokens;
     }
 
     /**

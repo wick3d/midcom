@@ -72,7 +72,7 @@ class midcom_core_controllers_page extends midcom_core_controllers_baseclasses_m
                     $this->object->create();
                     break;
                 default:
-                    throw new midcom_exception_httperror("{$this->request_method} not allowed", 405);
+                    throw new midcom_exception_httperror("{$this->dispatcher->request_method} not allowed", 405);
             }
         }
     }
