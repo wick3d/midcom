@@ -50,13 +50,20 @@ class midcom_core_services_configuration_yaml implements midcom_core_services_co
         
         $yaml = file_get_contents($filename);
         $this->globals = $this->unserialize($yaml);
-        
+
         if (!is_array($this->locals))
         {
             // Safety
             $this->locals = array();
         }
 
+    }
+    /**
+      * Return the configuration's component
+      */
+    public function get_component()
+    {
+        return $this->component;
     }
     
     private function load_locals()
