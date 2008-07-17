@@ -481,7 +481,10 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
                     $_MIDCOM->timer->setMarker('post-source');
                 }
                 
-                $tal->setTranslator($this->gettext_translator[$data['component']]);               
+                if (isset ($this->gettext_translator[$data['component']]))
+                {
+                    $tal->setTranslator($this->gettext_translator[$data['component']]);
+                }               
                 $content = $tal->execute();
                 
                 if ($_MIDCOM->timer)
