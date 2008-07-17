@@ -5,7 +5,9 @@ services_sessioning: midcom_core_services_sessioning_midgard
 services_uimessages: midcom_core_services_uimessages_midgard
 services_toolbars: midcom_core_services_toolbars_float
 services_authentication_cookie_cookiepath: /
-services_l10n: midcom_core_services_l10n_gettext
+services_l10n: 
+    backend: midcom_core_services_l10n_gettext
+    default_language: en
 cache_directory: __MIDGARDCACHE__/midgard
 log_file: __MIDGARDLOG__/__SERVERNAME__.__LOGNAME__.log
 enable_webdav: true
@@ -20,6 +22,7 @@ date_formats:
 metadata_lock_timeout: 30
 schemadb: file:/midcom_core/configuration/schema.yml
 default_timezone: UTC
+default_language: en_GB
 services_toolbars_configuration:
     js:
     logos:
