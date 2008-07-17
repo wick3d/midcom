@@ -20,6 +20,8 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
 
     private $elements_shown = array();
 
+    private $gettext_translator = array();
+
     public function __construct()
     {
         $this->stacks[0] = array();
@@ -411,9 +413,9 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
                 if (!class_exists('PHPTAL'))
                 {
                     require('PHPTAL.php');
-                    include_once('TAL/modifiers.php');
                 }
-                
+                include_once('TAL/modifiers.php');
+
                 if ($_MIDCOM->timer)
                 {
                     $_MIDCOM->timer->setMarker('post-require');
@@ -471,7 +473,7 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
                         $_MIDCOM->timer->setMarker("post-set-{$key}");
                     }
                 }
-                
+
                 $tal->setSource($content);
                 
                 if ($_MIDCOM->timer)
@@ -479,6 +481,7 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
                     $_MIDCOM->timer->setMarker('post-source');
                 }
                 
+                $tal->setTranslator($this->gettext_translator[$data['component']]);               
                 $content = $tal->execute();
                 
                 if ($_MIDCOM->timer)
@@ -514,5 +517,17 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
         ///TODO: Connect this to some signal that tells the MidCOM execution has ended.
         $_MIDCOM->uimessages->store();
     }
+    
+    /**
+      * Setting gettext translator for TAL. 
+      * This uses context to determine the component in use 
+      * It enables the possibility to keep translations per component
+      */
+    function set_gettext_translator($tr)
+    {
+        $context = $_MIDCOM->context->get();
+        $this->gettext_translator[$context['component']] = $tr;
+    }
+    
 }
 ?>
