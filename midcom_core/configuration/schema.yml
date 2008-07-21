@@ -19,11 +19,7 @@ default:
             widget: fckeditor
         component:
             title: component
-            type: select
-            type_config:
-                options:
-                    midcom_core: None
-                    net_nemein_news: News folder
-            widget: select
+            type: component
+            widget: component
             widget_config:
                 height: 1
