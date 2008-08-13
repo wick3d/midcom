@@ -371,7 +371,13 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
         
         $this->template('content_entry_point');
         $this->display();
-        
+
+        /* 
+         * Gettext is not context safe. Here we return the "original" textdomain
+         * because in dynamic call the new component may change it
+         */
+	textdomain($_MIDCOM->context->component);
+
         $_MIDCOM->context->delete();
     }
 
