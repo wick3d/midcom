@@ -343,8 +343,14 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
      * @param array $args associative arguments array
      * @return string url
      */
-    public function generate_url($route_id, array $args)
+    public function generate_url($route_id, array $args, midgard_page $page = null)
     {
+        if ( !is_null($page))
+        {
+            $_MIDCOM->context->create();
+            $this->set_page($page);
+            $this->initialize($_MIDCOM->context->page->component);
+        }
         $route_definitions = $this->get_routes();
         if (!isset($route_definitions[$route_id]))
         {
@@ -362,6 +368,14 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         {
             throw new UnexpectedValueException("Missing arguments matching route '{$route_id}' of {$this->component_name}: " . implode(', ', $link_remaining_args));
         }
+        
+        if ( !is_null($page))
+        {
+            $url = preg_replace('%/{2,}%', '/', $this->get_page_prefix() . $link);
+            $_MIDCOM->context->delete();
+            return $url;
+        }
+
         
         return preg_replace('%/{2,}%', '/', $_MIDCOM->context->prefix . $link);
     }
@@ -606,5 +620,60 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         // Unlike in route_matches falling through means match
         return true;
     }
+    
+    public function set_page(midgard_page $page)
+    {
+        $_MIDCOM->context->page = $page;
+    }
+    
+    private function get_page_prefix()
+    {
+        if (!$_MIDCOM->context->page)
+        {
+            throw new Exception("No page set for the manual dispatcher");
+        }
+    
+        $prefix = "{$_MIDGARD['prefix']}/";
+        $host_mc = midgard_host::new_collector('id', $_MIDGARD['host']);
+        $host_mc->set_key_property('root');
+        $host_mc->execute();
+        $roots = $host_mc->list_keys();
+        if (!$roots)
+        {
+            throw new Exception("Failed to load root page data for host {$_MIDGARD['host']}");
+        }
+        $root_id = null;
+        foreach ($roots as $root => $array)
+        {
+            $root_id = $root;
+            break;
+        }
+        
+        if ($_MIDCOM->context->page->id == $root_id)
+        {
+            return $prefix;
+        }
+        
+        $page_path = '';
+        $page_id = $_MIDCOM->context->page->id;
+        while (   $page_id
+               && $page_id != $root_id)
+        {
+            $parent_mc = midgard_page::new_collector('id', $page_id);
+            $parent_mc->set_key_property('up');
+            $parent_mc->add_value_property('name');
+            $parent_mc->execute();
+            $parents = $parent_mc->list_keys();
+            foreach ($parents as $parent => $array)
+            {
+                $page_id = $parent;
+                $page_path = $parent_mc->get_subkey($parent, 'name') . "/{$page_path}";
+            }
+        }
+        
+        return $prefix . $page_path;
+    }
+
+
 }
 ?>
