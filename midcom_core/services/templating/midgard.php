@@ -532,10 +532,10 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
       * This uses context to determine the component in use 
       * It enables the possibility to keep translations per component
       */
-    function set_gettext_translator($tr)
+    function set_gettext_translator($tr, $component)
     {
         $context = $_MIDCOM->context->get();
-        $this->gettext_translator[$context['component']] = $tr;
+        $this->gettext_translator[$component] = $tr;
     }
     
 }
