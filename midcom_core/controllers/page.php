@@ -65,20 +65,10 @@ class midcom_core_controllers_page extends midcom_core_controllers_baseclasses_m
             {
                 case 'GET':
                     // Get variant of the page
-                    $variant = $args['variant']['variant'];
-                    if (!isset($data['datamanager']->types->$variant))
-                    {
-                        throw new midcom_exception_notfound("{$args['variant']['variant']} not available");
-                    }
-                    
-                    $type_field = "as_{$args['variant']['type']}";
-                    if (!isset($data['datamanager']->types->$variant->$type_field))
-                    {
-                        throw new midcom_exception_notfound("Type {$args['variant']['type']} of {$args['variant']['variant']} not available");
-                    }
-                    
-                    echo $data['datamanager']->types->$variant->$type_field;
-                    die();
+                    $variant = new midcom_core_helpers_variants();
+                    $variant->datamanager = $data['datamanager'];
+                    $variant->object = $data['object'];
+                    $variant->handle($args['variant'], $this->dispatcher->request_method);
                 case 'MKCOL':
                     // Create subpage
                     $_MIDCOM->authorization->require_do('midgard:create', $data['object']);

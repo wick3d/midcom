@@ -34,6 +34,7 @@ class midcom_core_helpers_context
             'template_engine'      => 'tal',
             'template_entry_point' => 'ROOT',
             'content_entry_point'  => 'content',
+            'component'            => 'midcom_core'
         );
         $this->current_context = $context_id;
     }
