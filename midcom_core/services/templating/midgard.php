@@ -446,10 +446,13 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
                 }
                 
                 $tal->uimessages = false;
-                if (   $_MIDCOM->uimessages->has_messages()
-                    && $_MIDCOM->uimessages->can_view())
+                if ($_MIDCOM->configuration->enable_uimessages)
                 {
-                    $tal->uimessages = $_MIDCOM->uimessages->render();
+                    if (   $_MIDCOM->uimessages->has_messages()
+                        && $_MIDCOM->uimessages->can_view())
+                    {
+                        $tal->uimessages = $_MIDCOM->uimessages->render();
+                    }
                 }
 
                 if ($_MIDCOM->timer)
@@ -527,9 +530,12 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
             }
             echo "</ul>\n";
         }
-        
-        ///TODO: Connect this to some signal that tells the MidCOM execution has ended.
-        $_MIDCOM->uimessages->store();
+
+        if ($_MIDCOM->configuration->enable_uimessages)
+        {
+            ///TODO: Connect this to some signal that tells the MidCOM execution has ended.
+            $_MIDCOM->uimessages->store();
+        }
     }
     
     /**
