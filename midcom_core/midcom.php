@@ -20,7 +20,7 @@ class midcom_core_midcom
 
     // Helpers
     public $context;
-    public $timer = false;
+    public $timer = null;
     
     public function __construct($dispatcher = 'midgard')
     {
@@ -55,9 +55,8 @@ class midcom_core_midcom
     {   
         // Load the configuration loader and load core config
         $this->configuration = new midcom_core_services_configuration_yaml('midcom_core');
-        
-        $use_timer = $this->configuration->get('enable_benchmark');
-        if ($use_timer)
+
+        if ($this->configuration->enable_benchmark)
         {
             // Note: PEAR is not E_STRICT compatible
             error_reporting(E_ALL);
@@ -74,9 +73,9 @@ class midcom_core_midcom
         // Load the head helper
         $this->head = new midcom_core_helpers_head
         (
-            $this->configuration->get('enable_jquery_framework'),
-            $this->configuration->get('enable_js_midcom'),
-            $this->configuration->get('js_midcom_config')
+            $this->configuration->enable_jquery_framework,
+            $this->configuration->enable_js_midcom,
+            $this->configuration->js_midcom_config
         );
     }
     
@@ -98,11 +97,13 @@ class midcom_core_midcom
             throw new Exception("Service {$service} not installed");
         }
         
+        /*
         if (!class_exists("midcom_core_services_{$service}"))
         {
-            //echo "midcom_core_services_{$name}\n<br />";
-            //include($interface_file);
+            echo "midcom_core_services_{$name}\n<br />";
+            include($interface_file);
         }
+        */
         
         $service_implementation = $_MIDCOM->configuration->get("services_{$service}");
         if (!$service_implementation)
