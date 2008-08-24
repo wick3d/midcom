@@ -40,7 +40,7 @@ abstract class midcom_core_component_baseclass implements midcom_core_component_
             $tr->useDomain($component);
             
             // tell PHPTAL to use our translator
-            $_MIDCOM->templating->set_gettext_translator($tr);
+            $_MIDCOM->templating->set_gettext_translator($tr, $component);
         }
         catch (Exception $e)
         {

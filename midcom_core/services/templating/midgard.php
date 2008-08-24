@@ -371,7 +371,13 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
         
         $this->template('content_entry_point');
         $this->display();
-        
+
+        /* 
+         * Gettext is not context safe. Here we return the "original" textdomain
+         * because in dynamic call the new component may change it
+         */
+	textdomain($_MIDCOM->context->component);
+
         $_MIDCOM->context->delete();
     }
 
@@ -531,10 +537,10 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
       * This uses context to determine the component in use 
       * It enables the possibility to keep translations per component
       */
-    function set_gettext_translator($tr)
+    function set_gettext_translator($tr, $component)
     {
         $context = $_MIDCOM->context->get();
-        $this->gettext_translator[$context['component']] = $tr;
+        $this->gettext_translator[$component] = $tr;
     }
     
 }
