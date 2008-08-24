@@ -404,8 +404,12 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
         ob_start();
         include($cache_file);
         $content = ob_get_clean();
-        // FIXME: Remove this once we can actually invalidate cache
-        unlink($cache_file);
+        
+        if (!$_MIDCOM->configuration->templating_cache)
+        {
+            // FIXME: Remove this once we can actually invalidate cache
+            unlink($cache_file);
+        }
 
         switch ($data['template_engine'])
         {
@@ -414,7 +418,7 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
                 {
                     require('PHPTAL.php');
                 }
-                include_once('TAL/modifiers.php');
+                include('TAL/modifiers.php');
 
                 if ($_MIDCOM->timer)
                 {
@@ -486,6 +490,7 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
                     $tal->setTranslator($this->gettext_translator[$data['component']]);
                 }               
                 $content = $tal->execute();
+                unset($tal);
                 
                 if ($_MIDCOM->timer)
                 {

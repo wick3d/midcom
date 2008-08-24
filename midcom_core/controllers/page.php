@@ -68,7 +68,8 @@ class midcom_core_controllers_page extends midcom_core_controllers_baseclasses_m
                     $variant = new midcom_core_helpers_variants();
                     $variant->datamanager = $data['datamanager'];
                     $variant->object = $data['object'];
-                    $variant->handle($args['variant'], $this->dispatcher->request_method);
+                    echo $variant->handle($args['variant'], $this->dispatcher->request_method);
+                    die();
                 case 'MKCOL':
                     // Create subpage
                     $_MIDCOM->authorization->require_do('midgard:create', $data['object']);

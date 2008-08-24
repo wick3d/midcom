@@ -48,9 +48,21 @@ class midcom_core_helpers_variants
         {
             throw new midcom_exception_notfound("Type {$type_field} of {$variant_field} not available");
         }
-            
-        echo $this->datamanager->types->$variant_field->$type_field;
-        die();
+
+        // TODO: Mimetype, other headers
+        switch ($variant['type'])
+        {
+            case 'html':
+                $_MIDCOM->context->mimetype = 'text/html';
+                break;
+            case 'raw':
+            case 'csv':
+                $_MIDCOM->context->mimetype = 'text/plain';
+                break;
+        }
+        header('Content-Type: ' . $_MIDCOM->context->mimetype);
+
+        return $this->datamanager->types->$variant_field->$type_field;
     }
     
     public function __set($attribute, $value)
