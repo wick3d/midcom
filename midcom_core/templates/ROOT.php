@@ -34,7 +34,5 @@
              <a href="http://www.midgard-project.org/" rel="powered">Midgard CMS</a> power since 1999. 
              <a href="http://www.gnu.org/licenses/lgpl.html" rel="license">Free software</a>.
         </footer>
-        <span tal:condition="show_toolbar" tal:replace="php: MIDCOM.toolbar.render()" />
-        <span tal:condition="uimessages" tal:replace="structure uimessages" />
     </body>
 </html>
