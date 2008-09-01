@@ -36,7 +36,7 @@ class midcom_core_controllers_attachment
           */
         if ($this->configuration->enable_xsendfile)
         {
-            header('X-Sendfile: '.$blob->get_path());
+            header('X-Sendfile: ' . $blob->get_path());
         }
         else
         {
