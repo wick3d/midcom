@@ -386,6 +386,9 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
      */    
     public function template($element_identifier = 'template_entry_point')
     {
+        // Let injectors do their work
+        $_MIDCOM->componentloader->inject_template();
+
         $this->prepare_cache();
         $cache_file = $this->cache_directory . '/' . $this->get_cache_identifier() . '.php';
 

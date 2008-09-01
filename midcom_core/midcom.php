@@ -173,6 +173,9 @@ class midcom_core_midcom
         // Set up templating and environment        
         $_MIDCOM->templating->append_directory(MIDCOM_ROOT . '/midcom_core/templates');
         $this->dispatcher->populate_environment_data();
+        
+        // Let injectors do their work
+        $this->componentloader->inject_process();
 
         // Load component
         try

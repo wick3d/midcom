@@ -17,6 +17,8 @@ class midcom_core_component_loader
     public $authors = array();
     private $tried_to_load = array();
     private $interfaces = array();
+    private $process_injectors = array();
+    private $template_injectors = array();
 
     public function __construct()
     {
@@ -188,12 +190,44 @@ class midcom_core_component_loader
         {
             $this->manifests[$manifest['component']] = $manifest;
         }
+        
+        if (isset($manifest['process_injector']))
+        {
+            // This component has an injector for the process() phase
+            $this->process_injectors[$manifest['component']] = $manifest['process_injector'];
+        }
+
+        if (isset($manifest['template_injector']))
+        {
+            // This component has an injector for the template() phase
+            $this->template_injectors[$manifest['component']] = $manifest['template_injector'];
+        }
     }
-    
+
     private function load_all_manifests()
     {
-        // TODO: Cache
-        exec('find ' . escapeshellarg(MIDCOM_ROOT) . ' -follow -type f -name ' . escapeshellarg('manifest.yml'), $manifests);
+        if (!class_exists('Memcache'))
+        {
+            // Uncached manifest loading is very slow
+            exec('find ' . escapeshellarg(MIDCOM_ROOT) . ' -follow -type f -name ' . escapeshellarg('manifest.yml'), $manifests);
+            foreach ($manifests as $manifest)
+            {
+                if (strpos($manifest, 'scaffold') === false)
+                {
+                    $this->load_manifest($manifest);                
+                }
+            }
+            return;
+        }
+
+        // TODO: Refactor to utilize cache service infrastructure
+        $memcache = new Memcache;
+        $memcache->connect('localhost');
+        if (!$manifests = $memcache->get('manifests'))
+        {
+            exec('find ' . escapeshellarg(MIDCOM_ROOT) . ' -follow -type f -name ' . escapeshellarg('manifest.yml'), $manifests);
+            $memcache->set('manifests', $manifests, false, 600);
+        }
         foreach ($manifests as $manifest)
         {
             if (strpos($manifest, 'scaffold') === false)
@@ -201,6 +235,37 @@ class midcom_core_component_loader
                 $this->load_manifest($manifest);                
             }
         }
+        $memcache->close();
+    }
+
+    /**
+     * Injectors are component classes that manipulate the context
+     */
+    private function inject($injector_type)
+    {
+        $injector_array = "{$injector_type}_injectors";
+        $injector_method = "inject_{$injector_type}";
+        foreach ($this->$injector_array as $component => $injector_class)
+        {
+            // Ensure the component is loaded
+            $this->load($component);
+
+            // Instantiate the injector class
+            $injector = new $injector_class();
+            
+            // Inject
+            $injector->$injector_method();
+        }
+    }
+
+    public function inject_process()
+    {
+        $this->inject('process');
+    }
+
+    public function inject_template()
+    {
+        $this->inject('process');
     }
 }
 ?>
