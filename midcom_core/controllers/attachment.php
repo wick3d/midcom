@@ -28,6 +28,7 @@ class midcom_core_controllers_attachment
     public function action_serve($route_id, &$data, $args)
     {
         $att = new midgard_attachment($args['guid']);
+        $blob = new midgard_blob($att);
         header('Content-type: '.$att->mimetype);
         
         /**
@@ -35,12 +36,10 @@ class midcom_core_controllers_attachment
           */
         if ($this->configuration->enable_xsendfile)
         {
-            $file = '/var/lib/midgard/blobs/midgard/'.$att->location;
-            header("X-Sendfile: $file");
+            header('X-Sendfile: '.$blob->get_path());
         }
         else
         {
-            $blob = new midgard_blob($att);
             echo $blob->read_content();
         }
         exit();
