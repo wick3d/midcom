@@ -230,6 +230,15 @@ class midcom_helper_datamanager_widget implements midcom_helper_datamanager_widg
     {
         $this->form =& $form;
     }
+    
+    /**
+      * Returns the fields valid name or id
+      */
+    public function get_input_name()
+    {
+        return "{$this->namespace}_{$this->main_input_name}";
+    }
+
 
     /**
      * This function is called  before the configuration keys are merged into the types
