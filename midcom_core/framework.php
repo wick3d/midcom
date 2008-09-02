@@ -40,6 +40,9 @@ if (   isset($_SERVER['REQUEST_URI'])
     exit();
 }
 
+// Advertise the fact that this is a Midgard server
+header('X-Powered-By: Midgard/' . mgd_version());
+
 // Load the exception handler
 require(MIDCOM_ROOT . '/midcom_core/exceptionhandler.php');
 
