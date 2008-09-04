@@ -204,25 +204,36 @@ class midcom_core_component_loader
         }
     }
 
+    private function load_all_manifests_uncached()
+    {
+        // Uncached manifest loading is very slow
+        exec('find ' . escapeshellarg(MIDCOM_ROOT) . ' -follow -type f -name ' . escapeshellarg('manifest.yml'), $manifests);
+        foreach ($manifests as $manifest)
+        {
+            if (strpos($manifest, 'scaffold') === false)
+            {
+                $this->load_manifest($manifest);                
+            }
+        }
+    }
+
     private function load_all_manifests()
     {
         if (!class_exists('Memcache'))
         {
-            // Uncached manifest loading is very slow
-            exec('find ' . escapeshellarg(MIDCOM_ROOT) . ' -follow -type f -name ' . escapeshellarg('manifest.yml'), $manifests);
-            foreach ($manifests as $manifest)
-            {
-                if (strpos($manifest, 'scaffold') === false)
-                {
-                    $this->load_manifest($manifest);                
-                }
-            }
+            $this->load_all_manifests_uncached();
             return;
         }
 
         // TODO: Refactor to utilize cache service infrastructure
-        $memcache = new Memcache;
-        $memcache->connect('localhost');
+        $memcache = new Memcache();
+        if (!@$memcache->connect('localhost'))
+        {
+            // Couldn't connect
+            $this->load_all_manifests_uncached();
+            return;
+        }
+
         if (!$manifests = $memcache->get('manifests'))
         {
             exec('find ' . escapeshellarg(MIDCOM_ROOT) . ' -follow -type f -name ' . escapeshellarg('manifest.yml'), $manifests);
