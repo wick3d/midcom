@@ -31,9 +31,11 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
     {
         if (isset($_MIDCOM->context->route_id))
         {
-            return "{$_MIDGARD['host']}-{$_MIDGARD['page']}-{$_MIDGARD['style']}-" . $_MIDCOM->context->get_current_context() . "-{$_MIDCOM->context->route_id}";
+            return "{$_MIDGARD['host']}-{$_MIDGARD['page']}-{$_MIDGARD['style']}-" . $_MIDCOM->context->get_current_context() . 
+                   "-{$_MIDCOM->context->route_id}-{$_MIDCOM->context->template_entry_point}-{$_MIDCOM->context->content_entry_point}";
         }
-        return "{$_MIDGARD['host']}-{$_MIDGARD['page']}-{$_MIDGARD['style']}-" . $_MIDCOM->context->get_current_context();
+        return "{$_MIDGARD['host']}-{$_MIDGARD['page']}-{$_MIDGARD['style']}-" . $_MIDCOM->context->get_current_context() . 
+               "-{$_MIDCOM->context->template_entry_point}-{$_MIDCOM->context->content_entry_point}";
     }
     
     private function get_cache_directory()
