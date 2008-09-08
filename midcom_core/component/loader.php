@@ -276,7 +276,7 @@ class midcom_core_component_loader
 
     public function inject_template()
     {
-        $this->inject('process');
+        $this->inject('template');
     }
 }
 ?>
