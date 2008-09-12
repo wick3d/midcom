@@ -59,7 +59,6 @@ class midcom_core_services_authentication_cookie
     
     private function set_cookie()
     {
-        // TODO: Fix globals config
         setcookie(
                     $this->_cookie_id,
                     "{$this->session_id}-{$this->user_id}",
@@ -75,11 +74,10 @@ class midcom_core_services_authentication_cookie
     
     private function delete_cookie()
     {
-        // TODO: Fix globals config
         setcookie(
                     $this->_cookie_id,
                     false,
-                    0,
+                    time()-86400,
                     $_MIDCOM->configuration->services_authentication_cookie_cookiepath
                 );
     }
