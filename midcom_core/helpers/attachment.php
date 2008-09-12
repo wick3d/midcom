@@ -7,15 +7,76 @@
  */
 
 /**
- * Attachment helpers for MidCOM 3
+ * Basic attachment helpers for MidCOM 3
+ *
+ * Class provides some basic helpers for everyday attachments usage like getting the attachment serving uri
+ * or it provides methods for caching attachment to some internal or external storage
  *
  *
  * @package midcom_core
  */
-class midcom_core_helpers_attachment
+
+interface midcom_core_attachment
+{
+    /**
+      * Function implements signal connection. It should connect to on-created and on-deleted signals
+      * and map them to correspondent internal handler function
+      */
+    public function connect_to_signals();
+    
+    /**
+      * Returns the URL where the attachment is found. If attachment's permission for EVERYONE:READ is false
+      * then the MidCOM's internal attachment serving URI should be returned.
+      */
+    public static function get_url(midgard_attachment $attachment);
+
+    /**
+      * Adds attachment to caching backend. Function should return false if attachment's permission for EVERYONE:READ is false.
+      * It is required that cached attachments are public. 
+      *
+      * @param attachment midgard_attachment object
+      */
+    public static function add_to_cache(midgard_attachment $attachment);
+
+    /**
+      * Removes attachment from the caching backend
+      * @param attachment midgard_attachment object
+      */
+    public static function remove_from_cache(midgard_attachment $attachment);
+    
+} 
+
+class midcom_core_helpers_attachment implements midcom_core_attachment
 {
     public function __construct() {}
     
+    public function connect_to_signals()
+    {
+        midgard_object_class::connect_default('midgard_attachment', 'action-created-hook', array(
+            $this, 'on_creating'
+        ), array(
+            'attachment'
+        ));
+        
+        midgard_object_class::connect_default('midgard_attachment', 'action-deleted-hook', array(
+            $this, 'on_deleting'
+        ), array(
+        ));
+        
+        // TODO: undelete
+    }
+    
+    private function on_creating(midgard_attachment $attachment, $params)
+    {
+        midcom_core_helpers_attachment::add_to_cache($attachment);
+    }
+    
+    // TODO: Undelete support. Basically same as create
+    private function on_deleting(midgard_attachment $attachment, $params)
+    {
+        midcom_core_helpers_attachment::remove_from_cache($attachment);   
+    }
+
     /**
       * Returns the url where the attachment can be found
       *
