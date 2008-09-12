@@ -28,7 +28,7 @@ interface midcom_core_attachment
       * Returns the URL where the attachment is found. If attachment's permission for EVERYONE:READ is false
       * then the MidCOM's internal attachment serving URI should be returned.
       */
-    public static function get_url(midgard_attachment $attachment);
+    public static function get_url(midgard_attachment &$attachment);
 
     /**
       * Adds attachment to caching backend. Function should return false if attachment's permission for EVERYONE:READ is false.
@@ -36,13 +36,13 @@ interface midcom_core_attachment
       *
       * @param attachment midgard_attachment object
       */
-    public static function add_to_cache(midgard_attachment $attachment);
+    public static function add_to_cache(midgard_attachment &$attachment);
 
     /**
       * Removes attachment from the caching backend
       * @param attachment midgard_attachment object
       */
-    public static function remove_from_cache(midgard_attachment $attachment);
+    public static function remove_from_cache(midgard_attachment &$attachment);
     
 } 
 
@@ -87,7 +87,7 @@ class midcom_core_helpers_attachment implements midcom_core_attachment
       * @param midgard_attachment $attachment An attachment object
       * @return string url
       */
-    public static function get_url(midgard_attachment $attachment)
+    public static function get_url(midgard_attachment &$attachment)
     {
         // Cheking if cache is enabled and attachment is readable for anonymous users
         if ($_MIDCOM->configuration->enable_attachment_cache
@@ -107,7 +107,7 @@ class midcom_core_helpers_attachment implements midcom_core_attachment
       * @param midgard_attachment attachment An attachment object
       * @return true of false 
       */
-    public static function add_to_cache(midgard_attachment $attachment)
+    public static function add_to_cache(midgard_attachment &$attachment)
     {
         $blob = new midgard_blob($attachment);
         
@@ -135,7 +135,7 @@ class midcom_core_helpers_attachment implements midcom_core_attachment
       * @return true or false
       * 
       */
-    public static function remove_from_cache(midgard_attachment $attachment)
+    public static function remove_from_cache(midgard_attachment &$attachment)
     {
         $filepath = $_MIDCOM->configuration->attachment_cache_directory.$attachment->location;     
         if (is_file ($filepath))
