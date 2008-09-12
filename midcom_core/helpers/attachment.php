@@ -52,30 +52,34 @@ class midcom_core_helpers_attachment implements midcom_core_attachment
     
     public function connect_to_signals()
     {
-        midgard_object_class::connect_default('midgard_attachment', 'action-created-hook', array(
+        midgard_object_class::connect_default('midgard_attachment', 'action-created', array(
             $this, 'on_creating'
         ), array(
             'attachment'
         ));
-        
-        midgard_object_class::connect_default('midgard_attachment', 'action-deleted-hook', array(
+
+        midgard_object_class::connect_default('midgard_attachment', 'action-deleted', array(
             $this, 'on_deleting'
         ), array(
         ));
         
-        // TODO: undelete
+        // TODO: attachment cache needs undelete support
+        // TODO: attachment cache needs approvals support
     }
     
     private function on_creating(midgard_attachment $attachment, $params)
     {
-        midcom_core_helpers_attachment::add_to_cache($attachment);
+        if ($_MIDCOM->authorization->can_do('midgard:read', &$attachment, null))
+        {
+            midcom_core_helpers_attachment::add_to_cache($attachment);
+        }
     }
     
     // TODO: Undelete support. Basically same as create
     private function on_deleting(midgard_attachment $attachment, $params)
     {
         midcom_core_helpers_attachment::remove_from_cache($attachment);   
-    }
+    }    
 
     /**
       * Returns the url where the attachment can be found
@@ -85,12 +89,13 @@ class midcom_core_helpers_attachment implements midcom_core_attachment
       */
     public static function get_url(midgard_attachment $attachment)
     {
-        // FIXME: No ACL checking
-        if ($_MIDCOM->configuration->enable_attachment_cache)
+        // Cheking if cache is enabled and attachment is readable for anonymous users
+        if ($_MIDCOM->configuration->enable_attachment_cache
+            && $_MIDCOM->authorization->can_do('midgard:read', &$attachment, null))
         {
             return $_MIDCOM->configuration->attachment_cache_url . $attachment->location;
         }
-        else
+        else // if cache is not enabled or anonymous read is not allowed serving attachment through MidCOM
         {
             return '/__midcom/serveattachment/' . $attachment->guid . '/';
         }
@@ -109,6 +114,11 @@ class midcom_core_helpers_attachment implements midcom_core_attachment
         // FIXME: Attachment directory creating should be done more elegantly
         $attachment_dir = explode('/', $attachment->location);
         $attachment_dir = $_MIDCOM->configuration->attachment_cache_directory . "{$attachment_dir[0]}/{$attachment_dir[1]}/";
+        
+        if (is_file($_MIDCOM->configuration->attachment_cache_directory.$attachment->location)) // checking if the link already exists
+        {
+            return false;
+        }
 
         if(!is_dir($attachment_dir))
         {
