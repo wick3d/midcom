@@ -15,6 +15,7 @@ enable_jquery_framework: true
 enable_js_midcom: true
 enable_uimessages: false
 enable_xsendfile: false
+enable_attachment_cache: false
 js_midcom_config: 'enable_watchers: true, debug: false'
 date_formats:
     short: '%d/%m/%Y'
