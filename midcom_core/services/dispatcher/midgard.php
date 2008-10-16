@@ -142,8 +142,9 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         
         // In main Midgard request we dispatch the component in connection to a page
         $this->component_name = $component;
+        $_MIDCOM->context->component_name = $component;
         $_MIDCOM->context->component_instance = $_MIDCOM->componentloader->load($this->component_name, $_MIDCOM->context->page);
-        $_MIDCOM->templating->append_directory($_MIDCOM->componentloader->component_to_filepath($this->component_name) . '/templates');
+        $_MIDCOM->templating->append_directory($_MIDCOM->componentloader->component_to_filepath($_MIDCOM->context->component_name) . '/templates');
     }
     
     /**
@@ -151,17 +152,18 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
      */
     public function get_routes()
     {
-        $this->core_routes = $_MIDCOM->configuration->normalize_routes($_MIDCOM->configuration->get('routes'));
-        
+        $_MIDCOM->context->core_routes = $_MIDCOM->configuration->normalize_routes($_MIDCOM->configuration->get('routes'));
+        $_MIDCOM->context->component_routes = array();
+
         if (   !isset($_MIDCOM->context->component_instance)
             || !$_MIDCOM->context->component_instance)
         {
-            return $this->core_routes;
+            return $_MIDCOM->context->core_routes;
         }
         
-        $this->component_routes = $_MIDCOM->configuration->normalize_routes($_MIDCOM->context->component_instance->configuration->get('routes'));
+        $_MIDCOM->context->component_routes = $_MIDCOM->configuration->normalize_routes($_MIDCOM->context->component_instance->configuration->get('routes'));
         
-        return array_merge($this->component_routes, $this->core_routes);
+        return array_merge($_MIDCOM->context->component_routes, $MIDCOM->context->core_routes);
     }
 
 
@@ -302,7 +304,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
     
     private function is_core_route($route_id)
     {
-        if (isset($this->component_routes[$route_id]))
+        if (isset($_MIDCOM->context->component_routes[$route_id]))
         {
             return false;
         }
@@ -318,7 +320,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         }
         else
         {
-            $_MIDCOM->context->set_item($this->component_name, $data);
+            $_MIDCOM->context->set_item($_MIDCOM->context->component_name, $data);
         }
         
         // Set other context data from route
