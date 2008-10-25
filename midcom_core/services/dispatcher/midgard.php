@@ -163,7 +163,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         
         $_MIDCOM->context->component_routes = $_MIDCOM->configuration->normalize_routes($_MIDCOM->context->component_instance->configuration->get('routes'));
         
-        return array_merge($_MIDCOM->context->component_routes, $MIDCOM->context->core_routes);
+        return array_merge($_MIDCOM->context->component_routes, $_MIDCOM->context->core_routes);
     }
 
 
