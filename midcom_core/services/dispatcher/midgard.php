@@ -207,7 +207,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         foreach ($this->route_array as $route)
         {
             try
-            {
+            {   
                 $success_flag = true; // before trying route it's marked success
                 $this->dispatch_route($route);
             }
@@ -215,6 +215,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
             {
                 $this->exceptions_stack[] = $e; // Adding exception to exceptions stack
                 $success_flag = false; // route failed
+                throw $e;
             }
             if ($success_flag) // Checking for success
             {
@@ -250,7 +251,6 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         $this->route_id = $route;
         $_MIDCOM->context->route_id = $this->route_id;
         $selected_route_configuration = $this->route_definitions[$this->route_id];
-        
         // Handle allowed HTTP methods
         header('Allow: ' . implode(', ', $selected_route_configuration['allowed_methods']));
         if (!in_array($this->request_method, $selected_route_configuration['allowed_methods']))
@@ -299,7 +299,6 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         }
         
         $this->data_to_context($selected_route_configuration, $data);
-
     }
     
     private function is_core_route($route_id)
