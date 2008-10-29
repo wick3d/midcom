@@ -59,6 +59,13 @@ class midcom_core_services_i18n_gettext implements midcom_core_services_i18n
     
     public function &set_translation_domain($component_name)
     {
+        // If no component name is set, then it's from the core
+        // translations are going to get searched.
+        if ($component_name == '')
+        {
+            $component_name = 'midcom_core';
+        }
+    
         try
         {
             $this->tr[$component_name] = new PHPTAL_GetTextTranslator();
