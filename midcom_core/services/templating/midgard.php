@@ -379,7 +379,7 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
          * because in dynamic call the new component may change it
          */
         $_MIDCOM->context->delete();
-        $_MIDCOM->i18n->set_translation_domain($_MIDCOM->context->component);
+        $_MIDCOM->i18n->set_translation_domain($_MIDCOM->context->component_name);
     }
 
     /**
