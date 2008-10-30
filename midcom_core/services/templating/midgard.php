@@ -540,17 +540,6 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
             $_MIDCOM->uimessages->store();
         }
     }
-    
-    /**
-      * Setting gettext translator for TAL. 
-      * This uses context to determine the component in use 
-      * It enables the possibility to keep translations per component
-      */
-    function set_gettext_translator($tr, $component)
-    {
-        $context = $_MIDCOM->context->get();
-        $this->gettext_translator[$component] = $tr;
-    }
-    
+     
 }
 ?>
