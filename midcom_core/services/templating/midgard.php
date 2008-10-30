@@ -427,7 +427,10 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
                 {
                     require('PHPTAL.php');
                 }
-                include('TAL/modifiers.php');
+
+                // FIXME: Rethink whole tal modifiers concept 
+                include_once('TAL/modifiers.php');
+
                 if ($_MIDCOM->timer)
                 {
                     $_MIDCOM->timer->setMarker('post-require');
