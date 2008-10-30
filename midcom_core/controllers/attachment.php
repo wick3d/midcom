@@ -16,7 +16,7 @@ class midcom_core_controllers_attachment
 
     public function __construct($instance)
     {
-        $this->configuration = $_MIDCOM->configuration;
+      //  $this->configuration = $_MIDCOM->configuration;
     }
     
     /**
@@ -28,13 +28,20 @@ class midcom_core_controllers_attachment
     public function action_serve($route_id, &$data, $args)
     {
         $att = new midgard_attachment($args['guid']);
+                
+        if ($_MIDCOM->configuration->enable_attachment_cache)
+        {
+            header('Location: ' . midcom_core_helpers_attachment::get_url(&$att));
+            exit();
+        }
+
         $blob = new midgard_blob($att);
-        header('Content-type: '.$att->mimetype);
         
+        header('Content-type: '.$att->mimetype);
         /**
           * If X-Sendfile support is enabled just sending correct headers
           */
-        if ($this->configuration->enable_xsendfile)
+        if ($_MIDCOM->configuration->enable_xsendfile)
         {
             header('X-Sendfile: ' . $blob->get_path());
         }

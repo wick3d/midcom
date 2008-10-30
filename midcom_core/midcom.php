@@ -187,6 +187,13 @@ class midcom_core_midcom
             return;
         }
         
+        if ($this->configuration->enable_attachment_cache)
+        {
+            $classname = $this->configuration->attachment_handler;
+            $handler = new $classname();
+            $handler->connect_to_signals();
+        }
+        
         if (!$component)
         {
             $component = 'midcom_core';

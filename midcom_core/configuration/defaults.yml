@@ -7,7 +7,7 @@ services_toolbars: midcom_core_services_toolbars_null
 services_authentication_cookie_cookiepath: /
 services_i18n: midcom_core_services_i18n_gettext
 cache_directory: __MIDGARDCACHE__/midgard
-templating_cache: true
+templating_cache: false
 log_file: __MIDGARDLOG__/__SERVERNAME__.__LOGNAME__.log
 enable_webdav: true
 enable_benchmark: false
@@ -16,6 +16,7 @@ enable_jquery_framework: true
 enable_js_midcom: true
 enable_uimessages: false
 enable_xsendfile: false
+enable_attachment_cache: false
 js_midcom_config: 'enable_watchers: true, debug: false'
 date_formats:
     short: '%d/%m/%Y'
