@@ -65,6 +65,14 @@ class midcom_core_services_i18n_gettext implements midcom_core_services_i18n
         {
             $component_name = 'midcom_core';
         }
+        
+         // Checking if TAL translator is already available
+        if ( isset($this->tr[$component_name])) 
+        { 
+            // useDomain must be called. Otherwise gettext context is not changed 
+            $this->tr[$component_name]->useDomain($component_name); 
+            return $this->tr[$component_name]; 
+        } 
     
         try
         {
