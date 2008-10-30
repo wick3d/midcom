@@ -18,35 +18,10 @@ abstract class midcom_core_component_baseclass implements midcom_core_component_
     public $configuration = false;
     
     public function __construct($configuration)
-    {
-        require_once('PHPTAL.php'); // FIXME: Better place required
-        require_once 'PHPTAL/GetTextTranslator.php'; // FIXME: Better place required
+    {        
         $this->configuration = $configuration;
-        try {
-            $tr = new PHPTAL_GetTextTranslator();
-            $component = $configuration->get_component();
-
-            // set language to use for this session (first valid language will 
-            // be used)
-            $lang = $_MIDCOM->configuration->get('default_language');
-            $tr->setLanguage($lang.'.utf8', $lang);
-                    
-            // register gettext domain to use
-            $path = MIDCOM_ROOT . "/{$component}/locale/";
-
-            $tr->addDomain($component, $path);
-
-            // specify current domain
-            $tr->useDomain($component);
-            
-            // tell PHPTAL to use our translator
-            $_MIDCOM->templating->set_gettext_translator($tr, $component);
-        }
-        catch (Exception $e)
-        {
-            echo $e;
-        }
-
+        $component = $configuration->get_component();
+        $_MIDCOM->i18n->set_translation_domain($component);
     }
 
     public function initialize()

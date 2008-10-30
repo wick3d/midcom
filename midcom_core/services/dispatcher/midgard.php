@@ -142,8 +142,9 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         
         // In main Midgard request we dispatch the component in connection to a page
         $this->component_name = $component;
+        $_MIDCOM->context->component_name = $component;
         $_MIDCOM->context->component_instance = $_MIDCOM->componentloader->load($this->component_name, $_MIDCOM->context->page);
-        $_MIDCOM->templating->append_directory($_MIDCOM->componentloader->component_to_filepath($this->component_name) . '/templates');
+        $_MIDCOM->templating->append_directory($_MIDCOM->componentloader->component_to_filepath($_MIDCOM->context->component_name) . '/templates');
     }
     
     /**
@@ -151,17 +152,18 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
      */
     public function get_routes()
     {
-        $this->core_routes = $_MIDCOM->configuration->normalize_routes($_MIDCOM->configuration->get('routes'));
-        
+        $_MIDCOM->context->core_routes = $_MIDCOM->configuration->normalize_routes($_MIDCOM->configuration->get('routes'));
+        $_MIDCOM->context->component_routes = array();
+
         if (   !isset($_MIDCOM->context->component_instance)
             || !$_MIDCOM->context->component_instance)
         {
-            return $this->core_routes;
+            return $_MIDCOM->context->core_routes;
         }
         
-        $this->component_routes = $_MIDCOM->configuration->normalize_routes($_MIDCOM->context->component_instance->configuration->get('routes'));
+        $_MIDCOM->context->component_routes = $_MIDCOM->configuration->normalize_routes($_MIDCOM->context->component_instance->configuration->get('routes'));
         
-        return array_merge($this->component_routes, $this->core_routes);
+        return array_merge($_MIDCOM->context->component_routes, $_MIDCOM->context->core_routes);
     }
 
 
@@ -205,7 +207,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         foreach ($this->route_array as $route)
         {
             try
-            {
+            {   
                 $success_flag = true; // before trying route it's marked success
                 $this->dispatch_route($route);
             }
@@ -213,6 +215,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
             {
                 $this->exceptions_stack[] = $e; // Adding exception to exceptions stack
                 $success_flag = false; // route failed
+                throw $e;
             }
             if ($success_flag) // Checking for success
             {
@@ -248,7 +251,6 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         $this->route_id = $route;
         $_MIDCOM->context->route_id = $this->route_id;
         $selected_route_configuration = $this->route_definitions[$this->route_id];
-        
         // Handle allowed HTTP methods
         header('Allow: ' . implode(', ', $selected_route_configuration['allowed_methods']));
         if (!in_array($this->request_method, $selected_route_configuration['allowed_methods']))
@@ -297,12 +299,11 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         }
         
         $this->data_to_context($selected_route_configuration, $data);
-
     }
     
     private function is_core_route($route_id)
     {
-        if (isset($this->component_routes[$route_id]))
+        if (isset($_MIDCOM->context->component_routes[$route_id]))
         {
             return false;
         }
@@ -318,7 +319,7 @@ class midcom_core_services_dispatcher_midgard implements midcom_core_services_di
         }
         else
         {
-            $_MIDCOM->context->set_item($this->component_name, $data);
+            $_MIDCOM->context->set_item($_MIDCOM->context->component_name, $data);
         }
         
         // Set other context data from route

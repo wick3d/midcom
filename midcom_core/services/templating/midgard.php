@@ -370,7 +370,7 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
     {
         $_MIDCOM->context->create();
         $data = $this->dynamic_call($component_name, $route_id, $arguments, false);
-        
+
         $this->template('content_entry_point');
         $this->display();
 
@@ -378,9 +378,8 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
          * Gettext is not context safe. Here we return the "original" textdomain
          * because in dynamic call the new component may change it
          */
-	textdomain($_MIDCOM->context->component);
-
         $_MIDCOM->context->delete();
+        $_MIDCOM->i18n->set_translation_domain($_MIDCOM->context->component);
     }
 
     /**
@@ -421,7 +420,6 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
             // FIXME: Remove this once we can actually invalidate cache
             unlink($cache_file);
         }
-
         switch ($data['template_engine'])
         {
             case 'tal':
@@ -430,7 +428,6 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
                     require('PHPTAL.php');
                 }
                 include('TAL/modifiers.php');
-
                 if ($_MIDCOM->timer)
                 {
                     $_MIDCOM->timer->setMarker('post-require');
@@ -448,8 +445,7 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
                 if ($_MIDCOM->timer)
                 {
                     $_MIDCOM->timer->setMarker('post-set-show_toolbar');
-                }
-                
+                }              
                 $tal->uimessages = false;
                 if ($_MIDCOM->configuration->enable_uimessages)
                 {
@@ -499,10 +495,9 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
                     $_MIDCOM->timer->setMarker('post-source');
                 }
                 
-                if (isset ($this->gettext_translator[$data['component']]))
-                {
-                    $tal->setTranslator($this->gettext_translator[$data['component']]);
-                }               
+                $translator =& $_MIDCOM->i18n->set_translation_domain($_MIDCOM->context->component);
+                $tal->setTranslator(&$translator);  
+                          
                 $content = $tal->execute();
                 unset($tal);
                 
