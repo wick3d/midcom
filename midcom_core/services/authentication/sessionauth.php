@@ -72,6 +72,12 @@ class midcom_core_services_authentication_sessionauth implements midcom_core_ser
         return $this->person;
     }
     
+    public function get_user()
+    {
+        return $this->user;
+    }
+
+    
     /**
      * Executes the login to midgard.
      * @param username

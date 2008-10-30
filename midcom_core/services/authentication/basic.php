@@ -49,6 +49,11 @@ class midcom_core_services_authentication_basic implements midcom_core_services_
         
         return $this->person;
     }
+    
+    public function get_user()
+    {
+        return $this->user;
+    }
 
     public function login($username, $password)
     {
