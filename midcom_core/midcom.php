@@ -154,6 +154,10 @@ class midcom_core_midcom
         {
             require($path);
         }
+	else
+        {
+            throw new Exception("Autoloader fail. File does not exist");
+        }
     }
     
     /**
