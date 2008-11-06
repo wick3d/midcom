@@ -6,6 +6,7 @@
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License
  */
 
+
 if (! defined('MIDCOM_TEST_RUN'))
 {
     define('MIDCOM_TEST_RUN', true);
@@ -15,15 +16,15 @@ if (! defined('PHPUnit_MAIN_METHOD')) {
     define('PHPUnit_MAIN_METHOD', 'midcom_tests_all::main');
 }
 if (! defined('COMPONENT_DIR')) {
-    define('COMPONENT_DIR', '/projects/midcom/midcom3_0/midcom');
+    define('COMPONENT_DIR', dirname(__FILE__).'/../');
 }
+
 if (! defined('MIDCOM_CONFIG')) {
-    define('MIDCOM_CONFIG', '/projects/midcom/midcom3_0/midcom/midcom_core/configuration/defaults.yml');
+    define('MIDCOM_CONFIG', dirname(__FILE__).'/../midcom_core/configuration/defaults.yml');
 }
 if (! defined('MIDGARD_CONFIG')) {
     define('MIDGARD_CONFIG', 'midgard');
 }
-
 if (! defined('MIDCOM_TESTS_LOGLEVEL'))
 {
     define('MIDCOM_TESTS_LOGLEVEL', 'info');
@@ -38,6 +39,10 @@ if (! defined('MIDCOM_TESTS_ENABLE_OUTPUT')) {
 
 require_once 'PHPUnit/Framework.php';
 require_once 'PHPUnit/TextUI/TestRunner.php';
+
+$old_path = ini_get('include_path');
+
+ini_set('include_path', COMPONENT_DIR.PATH_SEPARATOR.$old_path);
 
 /**
  * @package midcom_tests
