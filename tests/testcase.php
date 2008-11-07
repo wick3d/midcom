@@ -35,41 +35,29 @@ require_once('PHPUnit/Framework.php');
 
 require_once('midcom_core/framework.php');
 
+//TODO: fix to correct path after packaged
+require_once('midgard_test.php');
+
 /**
  * @package midcom_tests
  */
-class midcom_tests_testcase extends PHPUnit_Framework_TestCase
+class midcom_tests_testcase extends midgard_test
 {    
-    protected function setUp()
+    public function setUp()
     {
         if (MIDCOM_TESTS_ENABLE_OUTPUT)
         {
             echo "\nsetUp\n\n";
         }
         
-        if (   !extension_loaded('midgard')
-            && !extension_loaded('midgard2'))
+        $db_name = $db_user = $db_pass = 'midgard_php_test';
+        
+        if ($this->create_database_with_privileges($db_name, $db_user, $db_pass, 'root', 'root'))
         {
-            $this->markTestSkipped('Midgard extension is not available');
+            $this->markTestSkipped("Failed to create database '{$db_name}' for tests");
         }
         
-        if (! isset($_MIDGARD))
-        {
-            // Start up a Midgard connection
-            $cnc = new midgard_connection();
-            $cnc->open(MIDGARD_CONFIG);
-            $cnc->set_loglevel(MIDCOM_TESTS_LOGLEVEL);
-            
-            if (is_int(MIDCOM_TESTS_SITEGROUP))
-            {
-                $sg = mgd_get_sitegroup(MIDCOM_TESTS_SITEGROUP);
-                $cnc->set_sitegroup($sg->name);
-            }
-            else
-            {
-                $cnc->set_sitegroup(MIDCOM_TESTS_SITEGROUP);
-            }
-        }        
+        parent::setUp();
         
         if (! isset($_MIDCOM))
         {
@@ -78,7 +66,38 @@ class midcom_tests_testcase extends PHPUnit_Framework_TestCase
         }
     }
     
-    protected function tearDown()
+    private function create_database_with_privileges($db_name, $db_user, $db_pass, $mysql_user='root', $mysql_pass=null)
+    {        
+        $create_sql = "DROP DATABASE IF EXISTS {$db_name}; CREATE DATABASE {$db_name} CHARACTER SET utf8;";
+        $privilege_sql = "GRANT all ON {$db_name}.*  TO '{$db_user}'@'localhost' IDENTIFIED BY '{$db_pass}'; FLUSH PRIVILEGES;";
+        
+        if (! is_null($mysql_pass))
+        {
+            $mysql_pass = "-p{$mysql_pass}";
+        }
+        
+        $cmd = "mysql -u {$mysql_user} {$mysql_pass} -e \"{$create_sql}\"";
+        exec($cmd, $ouput, $ret);
+
+        if (   $ret !== 0
+            && $ret !== 1)
+        {
+            $this->markTestSkipped('Failed to create database');
+            return false;
+        }
+        
+        $cmd = "mysql -u {$mysql_user} {$mysql_pass} -e \"{$privilege_sql}\"";
+        exec($cmd, $ouput, $ret);
+
+        if (   $ret !== 0
+            && $ret !== 1)
+        {
+            $this->markTestSkipped('Failed to assign privileges');
+            return false;
+        }
+    }
+    
+    public function tearDown()
     {
         if (MIDCOM_TESTS_ENABLE_OUTPUT)
         {
@@ -93,6 +112,8 @@ class midcom_tests_testcase extends PHPUnit_Framework_TestCase
         
         // Delete the context        
         $_MIDCOM->context->delete();
+        
+        parent::tearDown();
     }
     
     protected function create_context($component_name=null)
