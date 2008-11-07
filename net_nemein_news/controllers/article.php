@@ -27,7 +27,7 @@ class net_nemein_news_controllers_article extends midcom_core_controllers_basecl
         }
         $data['topic'] = new midgard_topic($topic_guid);
         
-        $qb = midgard_article::new_query_builder();
+        $qb = new midgard_query_builder('midgard_article');
         $qb->add_constraint('topic', '=', $data['topic']->id);
         $qb->add_constraint('name', '=', $args['name']);        
         $articles = $qb->execute();        
