@@ -13,8 +13,8 @@
  */
 class midcom_core_services_configuration_yaml implements midcom_core_services_configuration
 {
-    private $component = null;
-    private $inherited = null;
+    private $component = '';
+    private $components = array();
     private $globals = array();
     private $locals = array();
     private $objects = array();
@@ -22,14 +22,25 @@ class midcom_core_services_configuration_yaml implements midcom_core_services_co
     
     public function __construct($component, $object = null)
     {
+        // The original component we're working with
         $this->component = $component;
-        
-        // Check for inheritance
-        if (   isset($_MIDCOM)
-            && $_MIDCOM->componentloader->manifests[$this->component]['inherits'] !== null)
+        $this->components[] = $this->component;
+      
+        if (isset($_MIDCOM))
         {
-            $this->inherited = $_MIDCOM->componentloader->manifests[$this->component]['inherits'];
+            // MidCOM framework is running, check for inheritance
+            while (true)
+            {
+                $component = $_MIDCOM->componentloader->get_parent($component);
+                if ($component === null)
+                {
+                    break;
+                }
+                
+                $this->components[] = $component;
+            }
         }
+        $this->components = array_reverse($this->components);
         
         $this->load_globals();
         $this->load_locals();
@@ -48,34 +59,61 @@ class midcom_core_services_configuration_yaml implements midcom_core_services_co
         }
 
     }
-    
-    private function load_globals()
+
+    /**
+     * Internal helper of loading configuration array from a file
+     *
+     * @param string $snippet_path
+     * @return array
+     */
+    private function load_file($file_path)
     {
-        $this->globals = array();
-
-        if ($this->inherited !== null)
+        if (!file_exists($file_path))
         {
-            $filename = MIDCOM_ROOT . "/{$this->inherited}/configuration/defaults.yml";
-            if (file_exists($filename))
-            {
-                $yaml = file_get_contents($filename);
-                $this->globals = $this->unserialize($yaml);
-            }
-        }
-
-        $filename = MIDCOM_ROOT . "/{$this->component}/configuration/defaults.yml";
-        if (!file_exists($filename))
-        {
-            return;
+            return array();
         }
         
-        $yaml = file_get_contents($filename);
-        $this->globals = array_merge($this->globals, $this->unserialize($yaml));
-
-        if (!is_array($this->globals))
+        $yaml = file_get_contents($file_path);
+        $configuration = $this->unserialize($yaml);
+        if (!is_array($configuration))
         {
-            // Safety
-            $this->globals = array();
+            return array();
+        }
+        return $configuration;
+    }
+
+    /**
+     * Internal helper of loading configuration array from a snippet
+     *
+     * @param string $snippet_path
+     * @return array
+     */
+    private function load_snippet($snippet_path)
+    {
+        try
+        {
+            $snippet = new midgard_snippet();
+            $snippet->get_by_path($snippet_path);
+        }
+        catch (Exception $e) 
+        {
+            return array();
+        }
+        $configuration = $this->unserialize($snippet->code);
+        if (!is_array($configuration))
+        {
+            return array();
+        }
+        return $configuration;
+    }
+
+    private function load_globals()
+    {
+        $this->locals = array();
+        foreach ($this->components as $component)
+        {
+            $filename = MIDCOM_ROOT . "/{$component}/configuration/defaults.yml";
+            $this->globals = array_merge($this->globals, $this->load_file($filename));
         }
     }
 
@@ -90,56 +128,17 @@ class midcom_core_services_configuration_yaml implements midcom_core_services_co
     private function load_locals()
     {
         $this->locals = array();
-        if ($this->inherited !== null)
+        foreach ($this->components as $component)
         {
-            $snippetname = "/local-configuration/{$this->inherited}/configuration";
-            try
-            {
-                $snippet = new midgard_snippet();
-                $snippet->get_by_path($snippetname);
-            }
-            catch (Exception $e) { }
-            $inherited = $this->unserialize($snippet->code);
-            if (!is_array($inherited))
-            {
-                $this->locals = $inherited;
-            }
+            $snippet_path = "/local-configuration/{$component}/configuration";
+            $this->locals = array_merge($this->locals, $this->load_snippet($snippet_path));
         }
-
-        $snippetname = "/local-configuration/{$this->component}/configuration";
-        try
-        {
-            $snippet = new midgard_snippet();
-            $snippet->get_by_path($snippetname);
-        }
-        catch (Exception $e)
-        {
-            return;
-        }
-        $local = $this->unserialize($snippet->code);
-        if (!is_array($local))
-        {
-            $local = array();
-        }
-        $this->locals = array_merge($this->locals, $local);
     }
     
     private function load_objects($object_guid)
     {
         $mc = midgard_parameter::new_collector('parentguid', $object_guid);
-        
-        if ($this->inherited !== null)
-        {
-            $mc->begin_group('OR');
-            $mc->add_constraint('domain', '=', $this->inherited);
-            $mc->add_constraint('domain', '=', $this->component);
-            $mc->end_group();
-        }
-        else
-        {
-            $mc->add_constraint('domain', '=', $this->component);
-        }
-
+        $mc->add_constraint('domain', 'IN', $this->components);
         $mc->add_constraint('name', '=', 'configuration');
         $mc->add_constraint('value', '<>', '');
         $mc->set_key_property('guid');
