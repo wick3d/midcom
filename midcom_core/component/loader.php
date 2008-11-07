@@ -136,6 +136,14 @@ class midcom_core_component_loader
     }
 
     /**
+     * Get the component that is parent of current component
+     */
+    public function get_parent($component)
+    {
+        return $this->manifests[$component]['inherits'];
+    }
+
+    /**
      * Helper, converting a component name (net_nehmer_blog)
      * to a file path (/net/nehmer/blog).
      *
