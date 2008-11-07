@@ -166,7 +166,7 @@ class midcom_core_component_loader
      */
     public function get_parent($component)
     {
-        return $this->manifests[$component]['inherits'];
+        return $this->manifests[$component]['extends'];
     }
 
     /**
@@ -202,9 +202,9 @@ class midcom_core_component_loader
         {
             $manifest['authors'] = array();
         }
-        if (!isset($manifest['inherits']))
+        if (!isset($manifest['extends']))
         {
-            $manifest['inherits'] = null;
+            $manifest['extends'] = null;
         }
         foreach ($manifest['authors'] as $username => $author)
         {
@@ -257,7 +257,7 @@ class midcom_core_component_loader
 
     private function load_all_manifests()
     {
-        if (!class_exists('Memcache'))
+        if (!extension_loaded('memcache'))
         {
             $this->load_all_manifests_uncached();
             return;
