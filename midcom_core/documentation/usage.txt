@@ -55,3 +55,5 @@ Alternatively add `deb http://packages.dotdeb.org etch all` and `deb-src http://
 1. Install GIT with `# apt-get install git-core`
 2. Get the GIT repository `# git clone git://repo.or.cz/midcom.git`
 3. Point the `MidgardRootFile` of the Midgard Apache VirtualHost setup to MidCOM's `httpd/midcom-root.php`
+
+test
