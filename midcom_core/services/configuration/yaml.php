@@ -13,7 +13,8 @@
  */
 class midcom_core_services_configuration_yaml implements midcom_core_services_configuration
 {
-    private $component = '';
+    private $component = null;
+    private $inherited = null;
     private $globals = array();
     private $locals = array();
     private $objects = array();
@@ -22,6 +23,14 @@ class midcom_core_services_configuration_yaml implements midcom_core_services_co
     public function __construct($component, $object = null)
     {
         $this->component = $component;
+        
+        // Check for inheritance
+        if (   isset($_MIDCOM)
+            && $_MIDCOM->componentloader->manifests[$this->component]['inherits'] !== null)
+        {
+            $this->inherited = $_MIDCOM->componentloader->manifests[$this->component]['inherits'];
+        }
+        
         $this->load_globals();
         $this->load_locals();
         $this->merged = array_merge($this->globals, $this->locals);
@@ -42,6 +51,18 @@ class midcom_core_services_configuration_yaml implements midcom_core_services_co
     
     private function load_globals()
     {
+        $this->globals = array();
+
+        if ($this->inherited !== null)
+        {
+            $filename = MIDCOM_ROOT . "/{$this->inherited}/configuration/defaults.yml";
+            if (file_exists($filename))
+            {
+                $yaml = file_get_contents($filename);
+                $this->globals = $this->unserialize($yaml);
+            }
+        }
+
         $filename = MIDCOM_ROOT . "/{$this->component}/configuration/defaults.yml";
         if (!file_exists($filename))
         {
@@ -49,15 +70,15 @@ class midcom_core_services_configuration_yaml implements midcom_core_services_co
         }
         
         $yaml = file_get_contents($filename);
-        $this->globals = $this->unserialize($yaml);
+        $this->globals = array_merge($this->globals, $this->unserialize($yaml));
 
-        if (!is_array($this->locals))
+        if (!is_array($this->globals))
         {
             // Safety
-            $this->locals = array();
+            $this->globals = array();
         }
-
     }
+
     /**
       * Return the configuration's component
       */
@@ -68,6 +89,23 @@ class midcom_core_services_configuration_yaml implements midcom_core_services_co
     
     private function load_locals()
     {
+        $this->locals = array();
+        if ($this->inherited !== null)
+        {
+            $snippetname = "/local-configuration/{$this->inherited}/configuration";
+            try
+            {
+                $snippet = new midgard_snippet();
+                $snippet->get_by_path($snippetname);
+            }
+            catch (Exception $e) { }
+            $inherited = $this->unserialize($snippet->code);
+            if (!is_array($inherited))
+            {
+                $this->locals = $inherited;
+            }
+        }
+
         $snippetname = "/local-configuration/{$this->component}/configuration";
         try
         {
@@ -78,19 +116,30 @@ class midcom_core_services_configuration_yaml implements midcom_core_services_co
         {
             return;
         }
-        $this->locals = $this->unserialize($snippet->code);
-        
-        if (!is_array($this->locals))
+        $local = $this->unserialize($snippet->code);
+        if (!is_array($local))
         {
-            // Safety
-            $this->locals = array();
+            $local = array();
         }
+        $this->locals = array_merge($this->locals, $local);
     }
     
     private function load_objects($object_guid)
     {
         $mc = midgard_parameter::new_collector('parentguid', $object_guid);
-        $mc->add_constraint('domain', '=', $this->component);
+        
+        if ($this->inherited !== null)
+        {
+            $mc->begin_group('OR');
+            $mc->add_constraint('domain', '=', $this->inherited);
+            $mc->add_constraint('domain', '=', $this->component);
+            $mc->end_group();
+        }
+        else
+        {
+            $mc->add_constraint('domain', '=', $this->component);
+        }
+
         $mc->add_constraint('name', '=', 'configuration');
         $mc->add_constraint('value', '<>', '');
         $mc->set_key_property('guid');

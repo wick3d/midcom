@@ -168,6 +168,10 @@ class midcom_core_component_loader
         {
             $manifest['authors'] = array();
         }
+        if (!isset($manifest['inherits']))
+        {
+            $manifest['inherits'] = null;
+        }
         foreach ($manifest['authors'] as $username => $author)
         {
             if (!isset($author['name']))
