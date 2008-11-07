@@ -499,7 +499,7 @@ class midcom_core_services_templating_midgard implements midcom_core_services_te
                 }
                 
                 $translator =& $_MIDCOM->i18n->set_translation_domain($_MIDCOM->context->component);
-                $tal->setTranslator(&$translator);  
+                $tal->setTranslator($translator);  
                           
                 $content = $tal->execute();
                 unset($tal);
