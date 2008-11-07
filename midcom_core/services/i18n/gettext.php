@@ -106,7 +106,7 @@ class midcom_core_services_i18n_gettext implements midcom_core_services_i18n
 
         if ($switch_content_language)
         {
-            $this->set_content_language(&$language);
+            $this->set_content_language($language);
         }
     }
     
