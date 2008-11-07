@@ -58,7 +58,7 @@ class midcom_tests_testcase extends PHPUnit_Framework_TestCase
             // Start up a Midgard connection
             $cnc = new midgard_connection();
             $cnc->open(MIDGARD_CONFIG);
-            $cnc->set_debuglevel(MIDCOM_TESTS_LOGLEVEL);
+            $cnc->set_loglevel(MIDCOM_TESTS_LOGLEVEL);
             
             if (is_int(MIDCOM_TESTS_SITEGROUP))
             {
