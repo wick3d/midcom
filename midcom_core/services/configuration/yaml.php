@@ -190,6 +190,15 @@ class midcom_core_services_configuration_yaml implements midcom_core_services_co
     {
         return $this->get($key);
     }
+    
+    public function set_value($key, $value)
+    {
+        if (   defined('MIDCOM_TEST_RUN')
+            && MIDCOM_TEST_RUN)
+        {
+            $this->merged[$key] = $value;
+        }
+    }
 
     /**
      * Checks for the existence of a configuration key.
