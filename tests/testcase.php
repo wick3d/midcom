@@ -42,7 +42,9 @@ require_once('midgard_test.php');
  * @package midcom_tests
  */
 class midcom_tests_testcase extends midgard_test
-{    
+{
+    protected static $database_created = false;
+    
     public function setUp()
     {
         if (MIDCOM_TESTS_ENABLE_OUTPUT)
@@ -52,7 +54,7 @@ class midcom_tests_testcase extends midgard_test
         
         $db_name = $db_user = $db_pass = 'midgard_php_test';
         
-        if ($this->create_database_with_privileges($db_name, $db_user, $db_pass, 'root', 'root'))
+        if (! $this->create_database_with_privileges($db_name, $db_user, $db_pass, 'root', 'root'))
         {
             $this->markTestSkipped("Failed to create database '{$db_name}' for tests");
         }
@@ -67,7 +69,11 @@ class midcom_tests_testcase extends midgard_test
     }
     
     private function create_database_with_privileges($db_name, $db_user, $db_pass, $mysql_user='root', $mysql_pass=null)
-    {        
+    {
+        if (midcom_tests_testcase::$database_created) {
+            return true;
+        }
+        
         $create_sql = "DROP DATABASE IF EXISTS {$db_name}; CREATE DATABASE {$db_name} CHARACTER SET utf8;";
         $privilege_sql = "GRANT all ON {$db_name}.*  TO '{$db_user}'@'localhost' IDENTIFIED BY '{$db_pass}'; FLUSH PRIVILEGES;";
         
@@ -95,6 +101,10 @@ class midcom_tests_testcase extends midgard_test
             $this->markTestSkipped('Failed to assign privileges');
             return false;
         }
+        
+        midcom_tests_testcase::$database_created = true;
+        
+        return true;
     }
     
     public function tearDown()
@@ -111,7 +121,7 @@ class midcom_tests_testcase extends midgard_test
         }
         
         // Delete the context        
-        $_MIDCOM->context->delete();
+        //$_MIDCOM->context->delete();
         
         parent::tearDown();
     }
