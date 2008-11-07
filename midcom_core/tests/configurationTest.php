@@ -52,12 +52,9 @@ class midcom_core_tests_configuration extends midcom_tests_testcase
     {
         $path = realpath(dirname(__FILE__)).'/../configuration/defaults.yml';
         $data = syck_load(file_get_contents($path));
-        $data2 = $_MIDCOM->configuration->unserialize($path);
-        if ($data === $data2)
-        {
-            $this->assertTrue(true);
-        }
-        $this->assertTrue(false);
+        $data2 = $_MIDCOM->configuration->unserialize(file_get_contents($path));
+        
+        $this->assertTrue($data === $data2);
     }       
 }
 ?>
