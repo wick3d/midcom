@@ -161,7 +161,7 @@ class midcom_core_component_loader
      */
     public function get_parent($component)
     {
-        return $this->manifests[$component]['inherits'];
+        return $this->manifests[$component]['extends'];
     }
 
     /**
@@ -197,9 +197,9 @@ class midcom_core_component_loader
         {
             $manifest['authors'] = array();
         }
-        if (!isset($manifest['inherits']))
+        if (!isset($manifest['extends']))
         {
-            $manifest['inherits'] = null;
+            $manifest['extends'] = null;
         }
         foreach ($manifest['authors'] as $username => $author)
         {
