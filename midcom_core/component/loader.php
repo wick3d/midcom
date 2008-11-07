@@ -188,6 +188,11 @@ class midcom_core_component_loader
      */
     private function load_manifest($manifest_file)
     {
+        if (! file_exists($manifest_file))
+        {
+            return false;
+        }
+        
         $manifest_yaml = file_get_contents($manifest_file);
         
         // TODO: Implement using http://spyc.sourceforge.net/ if syck is not available
