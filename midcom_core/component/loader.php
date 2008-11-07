@@ -252,7 +252,7 @@ class midcom_core_component_loader
 
     private function load_all_manifests()
     {
-        if (!class_exists('Memcache'))
+        if (!extension_loaded('memcache'))
         {
             $this->load_all_manifests_uncached();
             return;
