@@ -63,6 +63,11 @@ class net_nemein_news_controllers_article extends midcom_core_controllers_basecl
     
     public function populate_toolbar()
     {
+        if (is_null($_MIDCOM->toolbar))
+        {
+            return;
+        }
+        
         $_MIDCOM->toolbar->add_item
         (
             'article', 

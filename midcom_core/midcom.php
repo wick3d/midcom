@@ -17,6 +17,7 @@ class midcom_core_midcom
     public $configuration;
     public $componentloader;
     public $dispatcher;
+    public $toolbar;
 
     // Helpers
     public $context;
