@@ -38,7 +38,8 @@ class midcom_core_tests_helpers
 
         while(($testfile = $tests_dir->read()) !== false)
         {
-            if (array_key_exists($testfile, $skip)) 
+            if (   array_key_exists($testfile, $skip)
+                || substr($testfile, 0, 1) == '.') 
             {
                 continue;
             }

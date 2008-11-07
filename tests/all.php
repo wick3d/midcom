@@ -27,14 +27,14 @@ if (! defined('MIDGARD_CONFIG')) {
 }
 if (! defined('MIDCOM_TESTS_LOGLEVEL'))
 {
-    define('MIDCOM_TESTS_LOGLEVEL', 'info');
+    define('MIDCOM_TESTS_LOGLEVEL', 'warn');
 }
 if (! defined('MIDCOM_TESTS_SITEGROUP'))
 {
     define('MIDCOM_TESTS_SITEGROUP', 1);
 }
 if (! defined('MIDCOM_TESTS_ENABLE_OUTPUT')) {
-    define('MIDCOM_TESTS_ENABLE_OUTPUT', true);
+    define('MIDCOM_TESTS_ENABLE_OUTPUT', false);
 }
 
 require_once 'PHPUnit/Framework.php';
@@ -56,7 +56,7 @@ class midcom_tests_all
     
     public static function get_components_with_tests()
     {
-        $skip = array( '.' , '..', 'scaffold', '.DS_Store', '.git', 'static', 'build' );
+        $skip = array( '.' , '..', 'scaffold', '.DS_Store', '.git', 'static', 'build', 'build.properties', 'build.xml' );
         $skip = array_flip($skip);
         $components = array();
         
@@ -69,7 +69,8 @@ class midcom_tests_all
         
         while (($file = $files->read()) !== false) 
         {
-            if (array_key_exists($file, $skip)) 
+            if (   array_key_exists($file, $skip)
+                || substr($file, 0, 1) == '.') 
             {
                 continue;
             }
