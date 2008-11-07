@@ -114,25 +114,46 @@ class midcom_core_component_loader
     
     public function load_template($component, $template, $fallback = true)
     {
-        $component_directory = $this->component_to_filepath($component);
-        $template_file = "{$component_directory}/templates/{$template}.php";
-        if (!file_exists($template_file))
+        static $component_tree = array();
+        $main_component = $component;
+        if (!isset($component_tree[$main_component]))
         {
-            if (!$fallback)
+            // Load component's inheritance tree
+            $component_tree[$main_component] = $component;
+            while (true)
             {
-                // TODO: Should we just ignore this silently instead?
-                throw new OutOfRangeException("Component {$component} template file {$template} not found.");
+                $component = $this->get_parent($component);
+                if ($component === null)
+                {
+                    break;
+                }
+                
+                $component_tree[$main_component] = $component;
             }
-            $component_directory = $this->component_to_filepath('midcom_core');
+            $component_tree[$main_component] = 'midcom_core';
+            $component_tree[$main_component] = array_reverse($component_tree[$main_component]);
+        }
+        
+        foreach ($component_tree[$main_component] as $component)
+        {
+            $component_directory = $this->component_to_filepath($component);
             $template_file = "{$component_directory}/templates/{$template}.php";
             if (!file_exists($template_file))
             {
-                // TODO: Should we just ignore this silently instead?
-                throw new OutOfRangeException("midcom_core template file {$template} not found.");
+                if (!$fallback)
+                {
+                    // TODO: Should we just ignore this silently instead?
+                    throw new OutOfRangeException("Component {$main_component} template file {$template} not found.");
+                }
+                // Go to next one in tree
+                continue;
             }
+            
+            return file_get_contents($template_file);
         }
-        
-        return file_get_contents($template_file);
+
+        // TODO: Should we just ignore this silently instead?
+        throw new OutOfRangeException("{$main_component} or {$component} template file {$template} not found.");
     }
 
     /**
