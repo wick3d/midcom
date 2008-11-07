@@ -57,7 +57,7 @@ class midcom_core_controllers_page extends midcom_core_controllers_baseclasses_m
 
     public function action_show($route_id, &$data, $args)
     {
-        parent::action_show($route_id, &$data, $args);
+        parent::action_show($route_id, $data, $args);
         
         if ($route_id == 'page_variants')
         {
