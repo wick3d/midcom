@@ -33,7 +33,7 @@ class midcom_core_component_loader
             return $this->tried_to_load[$component];
         }
             
-        if (!isset($this->manifests[$component]))
+        if (! isset($this->manifests[$component]))
         {
             return false;
         }
@@ -53,20 +53,21 @@ class midcom_core_component_loader
     
     public function load($component, $object = null)
     {
-        if (!$this->can_load($component))
+        if (! $this->can_load($component))
         {
             $this->tried_to_load[$component] = false;
             return false;
         }
         
-        if (isset($this->tried_to_load[$component]))
+        if (   isset($this->interfaces[$component])
+            && $this->tried_to_load[$component])
         {
-            // We have already loaded (or tried and failed to load) the component
+            // We have already loaded the component
             return $this->interfaces[$component];
         }
         
         $component_directory = $this->component_to_filepath($component);
-        if (!is_dir($component_directory))
+        if (! is_dir($component_directory))
         {        
             // No component directory
             $this->tried_to_load[$component] = false;
@@ -75,7 +76,7 @@ class midcom_core_component_loader
         }
         
         $component_interface_file = "{$component_directory}/interface.php";
-        if (!file_exists($component_interface_file))
+        if (! file_exists($component_interface_file))
         {
             // No interface class
             // TODO: Should we default to some baseclass?
@@ -83,7 +84,11 @@ class midcom_core_component_loader
             
             throw new OutOfRangeException("Component {$component} interface class file not found.");
         }
-        require($component_interface_file);
+        
+        if (! class_exists($component))
+        {
+            require($component_interface_file);
+        }
 
         // Load configuration for the component
         if ($_MIDCOM->timer)
