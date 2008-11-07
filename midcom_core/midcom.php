@@ -156,7 +156,7 @@ class midcom_core_midcom
         }
 	else
         {
-            throw new Exception("Autoloader fail. File does not exist");
+            throw new Exception("Autoloader fail. File {$path} does not exist");
         }
     }
     
